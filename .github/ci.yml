@@ -1,0 +1,12 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+      - uses: dschep/install-poetry-action@v1.3
+      - name: CI
+        run: make ci

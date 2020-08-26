@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "fastapi-cache2"
+version = "0.1.0"
+description = "Cache for FastAPI"
+authors = ["long2ice <long2ice@gmail.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+homepage = "https://github.com/long2ice/fastapi-cache"
+repository = "https://github.com/long2ice/fastapi-cache.git"
+documentation = "https://github.com/long2ice/fastapi-cache"
+keywords = ["fastapi", "cache", "caching"]
+packages = [
+    { include = "fastapi_cache" }
+]
+include = ["LICENSE", "README.md"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "*"
+uvicorn = "*"
+aioredis = {version = "*", optional = true}
+aiomcache = {version = "*", optional = true}
+
+[tool.poetry.dev-dependencies]
+flake8 = "*"
+isort = "*"
+black = "^19.10b0"
+pytest = "*"
+bandit = "*"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[tool.poetry.extras]
+redis = ["aioredis"]
+memcache = ["aiomcache"]
+all = ["aioredis","aiomcache"]
