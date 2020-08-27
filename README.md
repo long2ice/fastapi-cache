@@ -71,13 +71,45 @@ async def startup():
 
 ### Use `cache_response`
 
-If you want cache `fastapi` response transparently, you can use cache_response as decorator between router decorator and view function and must pass `request` as param of view function.
+If you want cache `fastapi` response transparently, you can use `cache_response` as decorator between router decorator and view function and must pass `request` as param of view function.
 
 And if you want use `ETag` and `Cache-Control` features, you must pass `response` param also.
 
 ### Use `cache`
 
 You can use `cache` as decorator like other cache tools to cache common function result.
+
+### Custom coder
+
+By default use `JsonCoder`, you can write custom coder to encode and decode cache result, just need inherit `fastapi_cache.coder.Coder`.
+
+```python
+@app.get("/")
+@cache_response(expire=60,coder=JsonCoder)
+async def index(request: Request, response: Response):
+    return dict(hello="world")
+```
+
+### Custom key builder
+
+```python
+def my_key_builder(
+    func,
+    namespace: Optional[str] = "",
+    request: Request = None,
+    response: Response = None,
+    *args,
+    **kwargs,
+):
+    prefix = FastAPICache.get_prefix()
+    cache_key = f"{prefix}:{namespace}:{func.__module__}:{func.__name__}:{args}:{kwargs}"
+    return cache_key
+
+@app.get("/")
+@cache_response(expire=60,coder=JsonCoder,key_builder=my_key_builder)
+async def index(request: Request, response: Response):
+    return dict(hello="world")
+```
 
 ## License
 
