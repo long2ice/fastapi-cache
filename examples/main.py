@@ -1,31 +1,33 @@
-import aioredis
 import uvicorn
 from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import Response
 
 from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from fastapi_cache.decorator import cache, cache_response
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.decorator import cache
 
 app = FastAPI()
 
+ret = 0
 
-@cache()
-async def get_cache():
-    return 1
+
+@cache(expire=1)
+async def get_ret():
+    global ret
+    ret = ret + 1
+    return ret
 
 
 @app.get("/")
-@cache_response(expire=60)
+@cache(expire=2)
 async def index(request: Request, response: Response):
-    return dict(hello="world")
+    return dict(ret=await get_ret())
 
 
 @app.on_event("startup")
 async def startup():
-    redis = await aioredis.create_redis_pool("redis://localhost", encoding="utf8")
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
 
 
 if __name__ == "__main__":

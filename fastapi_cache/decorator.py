@@ -39,45 +39,19 @@ def cache(
     def wrapper(func):
         @wraps(func)
         async def inner(*args, **kwargs):
+            request = kwargs.get("request")
             backend = FastAPICache.get_backend()
             cache_key = key_builder(func, namespace, *args, **kwargs)
-            ret = await backend.get(cache_key)
-            if ret is not None:
-                return coder.decode(ret)
+            ttl, ret = await backend.get_with_ttl(cache_key)
+            if not request:
+                if ret is not None:
+                    return coder.decode(ret)
+                ret = await func(*args, **kwargs)
+                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                return ret
 
-            ret = await func(*args, **kwargs)
-            await backend.set(cache_key, coder.encode(ret), expire)
-            return ret
-
-        return inner
-
-    return wrapper
-
-
-def cache_response(
-    expire: int = None,
-    coder: Type[Coder] = JsonCoder,
-    key_builder: Callable = default_key_builder,
-    namespace: Optional[str] = "",
-):
-    """
-    cache fastapi response
-    :param namespace:
-    :param expire:
-    :param coder:
-    :param key_builder:
-    :return:
-    """
-
-    def wrapper(func):
-        @wraps(func)
-        async def inner(request: Request, *args, **kwargs):
             if request.method != "GET":
                 return await func(request, *args, **kwargs)
-
-            backend = FastAPICache.get_backend()
-            cache_key = key_builder(func, namespace, request, *args, **kwargs)
-            ttl, ret = await backend.get_with_ttl(cache_key)
             if_none_match = request.headers.get("if-none-match")
             if ret is not None:
                 response = kwargs.get("response")
@@ -90,8 +64,8 @@ def cache_response(
                     response.headers["ETag"] = etag
                 return coder.decode(ret)
 
-            ret = await func(request, *args, **kwargs)
-            await backend.set(cache_key, coder.encode(ret), expire)
+            ret = await func(*args, **kwargs)
+            await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
             return ret
 
         return inner

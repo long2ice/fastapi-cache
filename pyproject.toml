@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-cache2"
-version = "0.1.0"
+version = "0.1.1"
 description = "Cache for FastAPI"
 authors = ["long2ice <long2ice@gmail.com>"]
 license = "Apache-2.0"
@@ -15,7 +15,7 @@ packages = [
 include = ["LICENSE", "README.md"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 fastapi = "*"
 uvicorn = "*"
 aioredis = {version = "*", optional = true}
