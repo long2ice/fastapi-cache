@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-cache2"
-version = "0.1.1"
+version = "0.1.2"
 description = "Cache for FastAPI"
 authors = ["long2ice <long2ice@gmail.com>"]
 license = "Apache-2.0"
@@ -20,6 +20,7 @@ fastapi = "*"
 uvicorn = "*"
 aioredis = {version = "*", optional = true}
 aiomcache = {version = "*", optional = true}
+python-dateutil = "*"
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"

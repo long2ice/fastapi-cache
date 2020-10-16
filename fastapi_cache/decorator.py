@@ -1,30 +1,14 @@
 from functools import wraps
 from typing import Callable, Optional, Type
 
-from starlette.requests import Request
-from starlette.responses import Response
-
 from fastapi_cache import FastAPICache
-from fastapi_cache.coder import Coder, JsonCoder
-
-
-def default_key_builder(
-    func,
-    namespace: Optional[str] = "",
-    request: Request = None,
-    response: Response = None,
-    *args,
-    **kwargs,
-):
-    prefix = FastAPICache.get_prefix()
-    cache_key = f"{prefix}:{namespace}:{func.__module__}:{func.__name__}:{args}:{kwargs}"
-    return cache_key
+from fastapi_cache.coder import Coder
 
 
 def cache(
     expire: int = None,
-    coder: Type[Coder] = JsonCoder,
-    key_builder: Callable = default_key_builder,
+    coder: Type[Coder] = None,
+    key_builder: Callable = None,
     namespace: Optional[str] = "",
 ):
     """
@@ -39,6 +23,13 @@ def cache(
     def wrapper(func):
         @wraps(func)
         async def inner(*args, **kwargs):
+            nonlocal coder
+            nonlocal expire
+            nonlocal key_builder
+
+            coder = coder or FastAPICache.get_coder()
+            expire = expire or FastAPICache.get_expire()
+            key_builder = key_builder or FastAPICache.get_key_builder()
             request = kwargs.get("request")
             backend = FastAPICache.get_backend()
             cache_key = key_builder(func, namespace, *args, **kwargs)
