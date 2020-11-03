@@ -14,3 +14,7 @@ class Backend:
     @abc.abstractmethod
     async def set(self, key: str, value: str, expire: int = None):
         raise NotImplementedError
+
+    @abc.abstractmethod
+    async def clear(self, namespace: str = None, key: str = None) -> int:
+        raise NotImplementedError

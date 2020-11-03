@@ -12,7 +12,7 @@ app = FastAPI()
 ret = 0
 
 
-@cache(expire=1)
+@cache(namespace="test", expire=1)
 async def get_ret():
     global ret
     ret = ret + 1
@@ -20,9 +20,14 @@ async def get_ret():
 
 
 @app.get("/")
-@cache(expire=2)
+@cache(namespace="test", expire=2)
 async def index(request: Request, response: Response):
     return dict(ret=await get_ret())
+
+
+@app.get("/clear")
+async def clear():
+    return await FastAPICache.clear(namespace="test")
 
 
 @app.on_event("startup")

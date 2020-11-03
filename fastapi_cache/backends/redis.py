@@ -20,3 +20,10 @@ class RedisBackend(Backend):
 
     async def set(self, key: str, value: str, expire: int = None):
         return await self.redis.set(key, value, expire=expire)
+
+    async def clear(self, namespace: str = None, key: str = None) -> int:
+        if namespace:
+            lua = f"for i, name in ipairs(redis.call('KEYS', '{namespace}:*')) do redis.call('DEL', name); end"
+            return await self.redis.eval(lua)
+        elif key:
+            return await self.redis.delete(key)

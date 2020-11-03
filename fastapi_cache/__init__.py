@@ -50,3 +50,8 @@ class FastAPICache:
     @classmethod
     def get_key_builder(cls):
         return cls._key_builder
+
+    @classmethod
+    async def clear(cls, namespace: str = None, key: str = None):
+        namespace = cls._prefix + ":" + namespace if namespace else None
+        return await cls._backend.clear(namespace, key)

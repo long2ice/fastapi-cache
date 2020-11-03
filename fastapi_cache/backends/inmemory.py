@@ -1,4 +1,5 @@
 import time
+from copy import copy
 from dataclasses import dataclass
 from threading import Lock
 from typing import Dict, Optional, Tuple
@@ -44,3 +45,16 @@ class InMemoryBackend(Backend):
     async def set(self, key: str, value: str, expire: int = None):
         with self._lock:
             self._store[key] = Value(value, self._now + expire)
+
+    async def clear(self, namespace: str = None, key: str = None) -> int:
+        count = 0
+        if namespace:
+            keys = list(self._store.keys())
+            for key in keys:
+                if key.startswith(namespace):
+                    del self._store[key]
+                    count += 1
+        elif key:
+            del self._store[key]
+            count += 1
+        return count
