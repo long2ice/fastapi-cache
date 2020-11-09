@@ -5,7 +5,7 @@ from aiomcache import Client
 from fastapi_cache.backends import Backend
 
 
-class MemcacheBackend(Backend):
+class MemcachedBackend(Backend):
     def __init__(self, mcache: Client):
         self.mcache = mcache
 
