@@ -1,5 +1,4 @@
 import time
-from copy import copy
 from dataclasses import dataclass
 from threading import Lock
 from typing import Dict, Optional, Tuple
