@@ -1,6 +1,6 @@
 import time
+from asyncio import Lock
 from dataclasses import dataclass
-from threading import Lock
 from typing import Dict, Optional, Tuple
 
 from fastapi_cache.backends import Backend
@@ -29,20 +29,20 @@ class InMemoryBackend(Backend):
                 return v
 
     async def get_with_ttl(self, key: str) -> Tuple[int, Optional[str]]:
-        with self._lock:
+        async with self._lock:
             v = self._get(key)
             if v:
                 return v.ttl_ts - self._now, v.data
             return 0, None
 
     async def get(self, key: str) -> str:
-        with self._lock:
+        async with self._lock:
             v = self._get(key)
             if v:
                 return v.data
 
     async def set(self, key: str, value: str, expire: int = None):
-        with self._lock:
+        async with self._lock:
             self._store[key] = Value(value, self._now + expire)
 
     async def clear(self, namespace: str = None, key: str = None) -> int:

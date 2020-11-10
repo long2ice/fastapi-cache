@@ -10,7 +10,7 @@ class MemcachedBackend(Backend):
         self.mcache = mcache
 
     async def get_with_ttl(self, key: str) -> Tuple[int, str]:
-        return 0, await self.mcache.get(key.encode())
+        return 3600, await self.mcache.get(key.encode())
 
     async def get(self, key: str):
         return await self.mcache.get(key, key.encode())
