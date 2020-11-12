@@ -74,6 +74,10 @@ async def startup():
 
 ```
 
+### Initialization
+
+Firstly you must call `FastAPICache.init` on startup event of `fastapi`, there are some global config you can pass in.
+
 ### Use `cache` decorator
 
 If you want cache `fastapi` response transparently, you can use `cache` as decorator between router decorator and view function and must pass `request` as param of view function.
@@ -94,6 +98,8 @@ async def index(request: Request, response: Response):
 ```
 
 ### Custom key builder
+
+By default use builtin key builder, if you need, you can override this and pass in `cache` or `FastAPICache.init` to take effect globally.
 
 ```python
 def my_key_builder(
@@ -116,7 +122,7 @@ async def index(request: Request, response: Response):
 
 ### InMemoryBackend
 
-`InMemoryBackend` only support in single node instead of distributed environment.
+`InMemoryBackend` store cache data in memory and use lazy delete, which mean if you don't access it after cached, it will not delete automatically.
 
 ## License
 
