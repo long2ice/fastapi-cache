@@ -26,11 +26,13 @@ def cache(
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
+            request = kwargs.get("request")
+            if request.headers.get("Cache-Control") == "no-store":
+                return await func(*args, **kwargs)
 
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
             key_builder = key_builder or FastAPICache.get_key_builder()
-            request = kwargs.get("request")
             backend = FastAPICache.get_backend()
             cache_key = key_builder(func, namespace, *args, **kwargs)
             ttl, ret = await backend.get_with_ttl(cache_key)
