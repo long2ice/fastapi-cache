@@ -16,6 +16,9 @@ class InMemoryBackend(Backend):
     _store: Dict[str, Value] = {}
     _lock = Lock()
 
+    def __init__(self, store: Dict[str, Value] = {}):
+        self._store = store
+
     @property
     def _now(self) -> int:
         return int(time.time())
