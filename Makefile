@@ -30,7 +30,7 @@ check: deps
 	@bandit -r $(checkfiles)
 
 test: deps
-	$(py_warn) pytest
+	@$(py_warn) poetry run pytest
 
 build: deps
 	@poetry build
