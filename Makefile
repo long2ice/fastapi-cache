@@ -32,7 +32,7 @@ check: deps
 test: deps
 	$(py_warn) pytest
 
-build: deps
+build: clean deps
 	@poetry build
 
 clean:
