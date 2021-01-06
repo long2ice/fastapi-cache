@@ -27,7 +27,7 @@ def cache(
             nonlocal expire
             nonlocal key_builder
             request = kwargs.get("request")
-            if request.headers.get("Cache-Control") == "no-store":
+            if request and request.headers.get("Cache-Control") == "no-store":
                 return await func(*args, **kwargs)
 
             coder = coder or FastAPICache.get_coder()

@@ -35,4 +35,7 @@ test: deps
 build: deps
 	@poetry build
 
+clean:
+	@rm -rf ./dist
+
 ci: check test
