@@ -26,7 +26,9 @@ def cache(
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
-            request = kwargs.get("request")
+            copy_kwargs = kwargs.copy()
+            request = copy_kwargs.pop("request", None)
+            response = copy_kwargs.pop("response", None)
             if request and request.headers.get("Cache-Control") == "no-store":
                 return await func(*args, **kwargs)
 
@@ -34,10 +36,10 @@ def cache(
             expire = expire or FastAPICache.get_expire()
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
-            copy_kwargs = kwargs.copy()
-            copy_kwargs.pop("request", None)
-            copy_kwargs.pop("response", None)
-            cache_key = key_builder(func, namespace, args=args, kwargs=copy_kwargs)
+
+            cache_key = key_builder(
+                func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
+            )
             ttl, ret = await backend.get_with_ttl(cache_key)
             if not request:
                 if ret is not None:
@@ -50,7 +52,6 @@ def cache(
                 return await func(request, *args, **kwargs)
             if_none_match = request.headers.get("if-none-match")
             if ret is not None:
-                response = kwargs.get("response")
                 if response:
                     response.headers["Cache-Control"] = f"max-age={ttl}"
                     etag = f"W/{hash(ret)}"
