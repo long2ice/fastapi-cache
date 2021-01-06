@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-cache2"
-version = "0.1.2"
+version = "0.1.3"
 description = "Cache for FastAPI"
 authors = ["long2ice <long2ice@gmail.com>"]
 license = "Apache-2.0"

@@ -2,6 +2,10 @@
 
 ## 0.1
 
+### 0.1.3
+
+- Fix cache key builder.
+
 ### 0.1.2
 
 - Add default config when init.

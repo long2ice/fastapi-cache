@@ -7,10 +7,10 @@ from starlette.responses import Response
 def default_key_builder(
     func,
     namespace: Optional[str] = "",
-    request: Request = None,
-    response: Response = None,
-    *args,
-    **kwargs,
+    request: Optional[Request] = None,
+    response: Optional[Response] = None,
+    args: Optional[tuple] = None,
+    kwargs: Optional[dict] = None,
 ):
     from fastapi_cache import FastAPICache
 

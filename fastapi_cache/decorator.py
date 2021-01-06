@@ -30,9 +30,10 @@ def cache(
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
             key_builder = key_builder or FastAPICache.get_key_builder()
-            request = kwargs.get("request")
+            request = kwargs.pop("request", None)
+            response = kwargs.pop("response", None)
             backend = FastAPICache.get_backend()
-            cache_key = key_builder(func, namespace, *args, **kwargs)
+            cache_key = key_builder(func, namespace, args=args, kwargs=kwargs)
             ttl, ret = await backend.get_with_ttl(cache_key)
             if not request:
                 if ret is not None:
