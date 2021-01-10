@@ -86,6 +86,8 @@ And if you want use `ETag` and `Cache-Control` features, you must pass `response
 
 You can also use `cache` as decorator like other cache tools to cache common function result.
 
+`expire` parameter states a caching time in seconds.
+
 ### Custom coder
 
 By default use `JsonCoder`, you can write custom coder to encode and decode cache result, just need inherit `fastapi_cache.coder.Coder`.
