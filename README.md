@@ -82,6 +82,14 @@ Firstly you must call `FastAPICache.init` on startup event of `fastapi`, there a
 
 If you want cache `fastapi` response transparently, you can use `cache` as decorator between router decorator and view function and must pass `request` as param of view function.
 
+Parameter | type, description
+------------ | -------------
+expire | int, states a caching time in seconds
+namespace | str, namespace to use to store certain cache items
+coder | which coder to use, e.g. JsonCoder
+key_builder | which key builder to use, default to builtin
+
+
 And if you want use `ETag` and `Cache-Control` features, you must pass `response` param also.
 
 You can also use `cache` as decorator like other cache tools to cache common function result.
