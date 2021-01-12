@@ -3,6 +3,7 @@ import json
 import pickle  # nosec:B403
 from decimal import Decimal
 from typing import Any
+from fastapi.encoders import jsonable_encoder
 
 import dateutil.parser
 
@@ -22,7 +23,7 @@ class JsonEncoder(json.JSONEncoder):
         elif isinstance(obj, Decimal):
             return {"val": str(obj), "_spec_type": "decimal"}
         else:
-            return super().default(obj)
+            return jsonable_encoder(obj)
 
 
 def object_hook(obj):
