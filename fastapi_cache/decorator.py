@@ -38,7 +38,7 @@ def cache(
             backend = FastAPICache.get_backend()
 
             cache_key = key_builder(
-                func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
+                func, namespace, request=request, response=response, args=coder.encode(args), kwargs=coder.encode(copy_kwargs)
             )
             ttl, ret = await backend.get_with_ttl(cache_key)
             if not request:
