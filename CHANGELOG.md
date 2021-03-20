@@ -2,6 +2,11 @@
 
 ## 0.1
 
+### 0.1.4
+
+- Fix default expire for memcached. (#13)
+- Update default key builder. (#12)
+
 ### 0.1.3
 
 - Fix cache key builder.
