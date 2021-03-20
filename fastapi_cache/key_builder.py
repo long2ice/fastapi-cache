@@ -17,6 +17,9 @@ def default_key_builder(
 
     prefix = f"{FastAPICache.get_prefix()}:{namespace}:"
     cache_key = (
-        prefix + hashlib.md5(f"{func.__module__}:{func.__name__}:{args}:{kwargs}").hexdigest()
+        prefix
+        + hashlib.md5(  # nosec:B303
+            f"{func.__module__}:{func.__name__}:{args}:{kwargs}"
+        ).hexdigest()
     )
     return cache_key
