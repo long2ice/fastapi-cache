@@ -32,11 +32,15 @@ def cache(
             if request and request.headers.get("Cache-Control") == "no-store":
                 return await func(*args, **kwargs)
 
+            try:
+                backend = FastAPICache.get_backend()
+            except AssertionError:
+                ret = await func(*args, **kwargs)
+                return ret
+
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
             key_builder = key_builder or FastAPICache.get_key_builder()
-            backend = FastAPICache.get_backend()
-
             cache_key = key_builder(
                 func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
             )
