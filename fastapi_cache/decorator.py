@@ -54,7 +54,9 @@ def cache(
                     return coder.decode(ret)
                 ret = await func(*args, **kwargs)
                 try:
-                    await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                    await backend.set(
+                        cache_key, coder.encode(ret), expire or FastAPICache.get_expire()
+                    )
                 except ConnectionRefusedError:
                     pass
                 return ret
