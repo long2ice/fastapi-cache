@@ -16,7 +16,10 @@ CONVERTERS = {
 class JsonEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
-            return {"val": obj.strftime("%Y-%m-%d %H:%M:%S"), "_spec_type": "datetime"}
+            if obj.tzinfo:
+                return {"val": obj.strftime("%Y-%m-%d %H:%M:%S%z"), "_spec_type": "datetime"}
+            else:
+                return {"val": obj.strftime("%Y-%m-%d %H:%M:%S"), "_spec_type": "datetime"}
         elif isinstance(obj, datetime.date):
             return {"val": obj.strftime("%Y-%m-%d"), "_spec_type": "date"}
         elif isinstance(obj, Decimal):
