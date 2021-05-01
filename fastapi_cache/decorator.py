@@ -32,20 +32,33 @@ def cache(
             if request and request.headers.get("Cache-Control") == "no-store":
                 return await func(*args, **kwargs)
 
+            try:
+                backend = FastAPICache.get_backend()
+            except AssertionError:
+                ret = await func(*args, **kwargs)
+                return ret
+
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
             key_builder = key_builder or FastAPICache.get_key_builder()
-            backend = FastAPICache.get_backend()
-
             cache_key = key_builder(
                 func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
             )
-            ttl, ret = await backend.get_with_ttl(cache_key)
+            try:
+                ttl, ret = await backend.get_with_ttl(cache_key)
+            except ConnectionRefusedError:
+                ttl, ret = 0, None
+
             if not request:
                 if ret is not None:
                     return coder.decode(ret)
                 ret = await func(*args, **kwargs)
-                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                try:
+                    await backend.set(
+                        cache_key, coder.encode(ret), expire or FastAPICache.get_expire()
+                    )
+                except ConnectionRefusedError:
+                    pass
                 return ret
 
             if request.method != "GET":
@@ -62,7 +75,10 @@ def cache(
                 return coder.decode(ret)
 
             ret = await func(*args, **kwargs)
-            await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+            try:
+                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+            except ConnectionRefusedError:
+                pass
             return ret
 
         return inner
