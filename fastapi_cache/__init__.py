@@ -55,3 +55,7 @@ class FastAPICache:
     async def clear(cls, namespace: str = None, key: str = None):
         namespace = cls._prefix + ":" + namespace if namespace else None
         return await cls._backend.clear(namespace, key)
+
+    @classmethod
+    async def clear_prefix(cls):
+        return await cls._backend.clear(namespace=cls._prefix)
