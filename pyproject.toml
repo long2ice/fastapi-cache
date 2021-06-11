@@ -29,8 +29,8 @@ isort = "^5.5.2"
 pytest = "^6.1.2"
 
 [build-system]
-build-backend = "poetry.masonry.api"
-requires = ["poetry_core>=1.1.4"]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.1.4"]
 
 [tool.poetry.extras]
 all = ["aioredis", "aiomcache"]
