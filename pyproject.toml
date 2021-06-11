@@ -30,7 +30,7 @@ pytest = "^6.1.2"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.1.4"]
+requires = ["poetry-core>=1.0.0"]
 
 [tool.poetry.extras]
 all = ["aioredis", "aiomcache"]
