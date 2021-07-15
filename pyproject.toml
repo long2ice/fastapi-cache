@@ -18,7 +18,7 @@ include = ["LICENSE", "README.md"]
 python = "^3.7"
 fastapi = "*"
 uvicorn = "*"
-aioredis = {version = "*", optional = true}
+aioredis = {version = ">=2.0.0b1", optional = true}
 aiomcache = {version = "*", optional = true}
 python-dateutil = "*"
 
