@@ -69,7 +69,7 @@ async def index(request: Request, response: Response):
 
 @app.on_event("startup")
 async def startup():
-    redis = await aioredis.create_redis_pool("redis://localhost", encoding="utf8")
+    redis =  aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
 ```
