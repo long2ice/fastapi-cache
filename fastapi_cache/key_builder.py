@@ -19,7 +19,7 @@ def default_key_builder(
     cache_key = (
         prefix
         + hashlib.md5(  # nosec:B303
-            f"{func.__module__}:{func.__name__}:{args}:{kwargs}"
+            f"{func.__module__}:{func.__name__}:{args}:{kwargs}".encode('utf-8')
         ).hexdigest()
     )
     return cache_key
