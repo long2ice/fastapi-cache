@@ -2,6 +2,10 @@
 
 ## 0.1
 
+### 0.1.5
+- Fix setting expire for redis (#24)
+- Update expire key
+
 ### 0.1.4
 
 - Fix default expire for memcached. (#13)
