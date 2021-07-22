@@ -19,7 +19,7 @@ class RedisBackend(Backend):
         return await self.redis.get(key)
 
     async def set(self, key: str, value: str, expire: int = None):
-        return await self.redis.set(key, value, expire=expire)
+        return await self.redis.set(key, value, ex=expire)
 
     async def clear(self, namespace: str = None, key: str = None) -> int:
         if namespace:
