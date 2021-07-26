@@ -5,7 +5,6 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from fastapi_cache import FastAPICache
-from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
 
