@@ -2,6 +2,11 @@
 
 ## 0.1
 
+### 0.1.6
+
+- Fix redis cache.
+- Encode key builder.
+
 ### 0.1.5
 
 - Fix setting expire for redis (#24)

@@ -10,10 +10,8 @@ class RedisBackend(Backend):
         self.redis = redis
 
     async def get_with_ttl(self, key: str) -> Tuple[int, str]:
-        p = self.redis.pipeline()
-        p.ttl(key)
-        p.get(key)
-        return await p.execute()
+        async with self.redis.pipeline(transaction=True) as pipe:
+            return await (pipe.ttl(key).get(key).execute())
 
     async def get(self, key) -> str:
         return await self.redis.get(key)
@@ -24,6 +22,6 @@ class RedisBackend(Backend):
     async def clear(self, namespace: str = None, key: str = None) -> int:
         if namespace:
             lua = f"for i, name in ipairs(redis.call('KEYS', '{namespace}:*')) do redis.call('DEL', name); end"
-            return await self.redis.eval(lua)
+            return await self.redis.eval(lua, numkeys=0)
         elif key:
             return await self.redis.delete(key)

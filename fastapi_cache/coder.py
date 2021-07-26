@@ -3,9 +3,9 @@ import json
 import pickle  # nosec:B403
 from decimal import Decimal
 from typing import Any
-from fastapi.encoders import jsonable_encoder
 
 import dateutil.parser
+from fastapi.encoders import jsonable_encoder
 
 CONVERTERS = {
     "date": dateutil.parser.parse,
