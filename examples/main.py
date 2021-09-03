@@ -10,8 +10,17 @@ from fastapi_cache.decorator import cache
 
 app = FastAPI()
 
-ret = 0
+@FastAPICache.on_event("existing_key")
+def exists_in_cache(func, *args, **kwargs):
+    print("Existing key")
+    return None
 
+@FastAPICache.on_event("new_key")
+def new_in_cache(func, *args, **kwargs):
+    print("New key set")
+    return None
+
+ret = 0
 
 @cache(namespace="test", expire=1)
 async def get_ret():

@@ -11,6 +11,9 @@ class FastAPICache:
     _init = False
     _coder = None
     _key_builder = None
+    _on_existing_key = None
+    _on_new_key = None
+    _event_handlers = {}
 
     @classmethod
     def init(
@@ -19,7 +22,7 @@ class FastAPICache:
         prefix: str = "",
         expire: int = None,
         coder: Coder = JsonCoder,
-        key_builder: Callable = default_key_builder,
+        key_builder: Callable = default_key_builder
     ):
         if cls._init:
             return
@@ -29,6 +32,19 @@ class FastAPICache:
         cls._expire = expire
         cls._coder = coder
         cls._key_builder = key_builder
+        cls._event_handlers = {}
+
+    @classmethod
+    def on_event(cls, type):
+        def registerhandler(handler):
+            if type == "existing_key":
+                cls.set_on_existing_key(handler)
+            elif type == "new_key":
+                cls.set_on_new_key(handler)
+            else:
+                raise Exception("Unsupported type for on_event")
+            return handler
+        return registerhandler
 
     @classmethod
     def get_backend(cls):
@@ -50,6 +66,22 @@ class FastAPICache:
     @classmethod
     def get_key_builder(cls):
         return cls._key_builder
+
+    @classmethod
+    def get_on_existing_key(cls):
+        return cls._on_existing_key
+
+    @classmethod
+    def get_on_new_key(cls):
+        return cls._on_new_key
+
+    @classmethod
+    def set_on_existing_key(cls, handler):
+        cls._on_existing_key = handler
+
+    @classmethod
+    def set_on_new_key(cls, handler):
+        cls._on_new_key = handler
 
     @classmethod
     async def clear(cls, namespace: str = None, key: str = None):

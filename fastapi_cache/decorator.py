@@ -35,6 +35,8 @@ def cache(
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
             key_builder = key_builder or FastAPICache.get_key_builder()
+            on_existing_key = FastAPICache.get_on_existing_key()
+            on_new_key = FastAPICache.get_on_new_key()
             backend = FastAPICache.get_backend()
 
             cache_key = key_builder(
@@ -43,8 +45,16 @@ def cache(
             ttl, ret = await backend.get_with_ttl(cache_key)
             if not request:
                 if ret is not None:
+                    if on_existing_key is not None:
+                        on_existing_key(
+                            func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
+                        )
                     return coder.decode(ret)
                 ret = await func(*args, **kwargs)
+                if on_new_key is not None:
+                    on_new_key(
+                        func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
+                    )
                 await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
                 return ret
 
@@ -62,6 +72,10 @@ def cache(
                 return coder.decode(ret)
 
             ret = await func(*args, **kwargs)
+            if on_new_key is not None:
+                on_new_key(
+                    func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
+                )
             await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
             return ret
 
