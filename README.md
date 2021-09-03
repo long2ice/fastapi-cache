@@ -12,8 +12,9 @@
 ## Features
 
 - Support `redis` and `memcache` and `in-memory` backends.
-- Easily integration with `fastapi`.
+- Easily integrate with `fastapi`.
 - Support http cache like `ETag` and `Cache-Control`.
+- Event handlers for when a new key is added and existing key called
 
 ## Requirements
 
@@ -131,6 +132,39 @@ async def index(request: Request, response: Response):
 ### InMemoryBackend
 
 `InMemoryBackend` store cache data in memory and use lazy delete, which mean if you don't access it after cached, it will not delete automatically.
+
+### Event handling
+
+For the events `new_key` and `existing_key` you can pass in a custom handler. By default there are no handlers.
+
+*Via a decorator:*
+
+```python
+@FastAPICache.on_event("existing_key")
+def exists_in_cache(func, *args, **kwargs):
+    print("Existing key")
+    return None
+
+@FastAPICache.on_event("new_key")
+def new_in_cache(func, *args, **kwargs):
+    print("New key set")
+    return None
+```
+
+*Via a class method:*
+
+```python
+def exists_in_cache(func, *args, **kwargs):
+    print("Existing key")
+    return None
+
+def new_in_cache(func, *args, **kwargs):
+    print("New key set")
+    return None
+
+FastAPICache.set_on_existing_key(exists_in_cache)
+FastAPICache.set_on_new_key(new_in_cache)
+```
 
 ## License
 
