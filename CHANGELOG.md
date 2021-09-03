@@ -2,6 +2,11 @@
 
 ## 0.1
 
+### 0.1.7
+
+- Added event handling for new key and existing key
+- Added tests for custom_key_builder and event handling
+
 ### 0.1.6
 
 - Fix redis cache.
