@@ -45,7 +45,7 @@ async def test_event_handlers_triggered(mock_new_key_function, mock_existing_key
     FastAPICache.set_on_new_key(mock_new_key_function)
     FastAPICache.set_on_existing_key(mock_existing_key_function)
 
-    # Call "/"" route and await response. Creating a new key
+    # Call "/" route and await response. Creating a new key
     async with AsyncClient(app=app, base_url="http://test") as ac:
         response = await ac.get("/")
 
@@ -57,7 +57,7 @@ async def test_event_handlers_triggered(mock_new_key_function, mock_existing_key
     # Reset mock for new key function
     mock_new_key_function.reset_mock()
 
-    # Call "/"" route and await response. Key already exists
+    # Call "/" route and await response. Key already exists
     async with AsyncClient(app=app, base_url="http://test") as ac:
         response = await ac.get("/")
 

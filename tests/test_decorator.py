@@ -31,7 +31,7 @@ async def test_custom_key_builder_redis():
     Tests if custom_key_builder creates key value in Redis
     """
 
-    # Call "/"" route and await response 
+    # Call "/" route and await response 
     async with AsyncClient(app=app, base_url="http://test") as ac:
         response = await ac.get("/")
 
