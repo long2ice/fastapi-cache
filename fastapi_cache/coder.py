@@ -4,12 +4,12 @@ import pickle  # nosec:B403
 from decimal import Decimal
 from typing import Any
 
-import dateutil.parser
+import pendulum
 from fastapi.encoders import jsonable_encoder
 
 CONVERTERS = {
-    "date": dateutil.parser.parse,
-    "datetime": dateutil.parser.parse,
+    "date": pendulum.parse,
+    "datetime": lambda x: pendulum.parse(x, exact=True),
     "decimal": Decimal,
 }
 
