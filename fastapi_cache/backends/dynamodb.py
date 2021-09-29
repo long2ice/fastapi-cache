@@ -17,6 +17,11 @@ class DynamoBackend(Backend):
 
     As with all AWS clients, credentials will be taken from the environment. Check the AWS SDK
     for more information.
+
+    Usage:
+        >> dynamodb = DynamoBackend(table_name="your-cache", region="eu-west-1")
+        >> await dynamodb.init()
+        >> FastAPICache.init(dynamodb)
     """
 
     def __init__(self, table_name, region=None):
