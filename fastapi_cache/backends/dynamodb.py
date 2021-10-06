@@ -1,6 +1,6 @@
 import datetime
-
 from typing import Tuple
+
 from aiobotocore.session import get_session
 
 from fastapi_cache.backends import Backend
@@ -26,25 +26,20 @@ class DynamoBackend(Backend):
 
     def __init__(self, table_name, region=None):
         self.session = get_session()
-        self.client = None # Needs async init
+        self.client = None  # Needs async init
         self.table_name = table_name
         self.region = region
 
     async def init(self):
-        self.client = await self.session.create_client('dynamodb', region_name=self.region).__aenter__()
+        self.client = await self.session.create_client(
+            "dynamodb", region_name=self.region
+        ).__aenter__()
 
     async def close(self):
         self.client = await self.client.__aexit__(None, None, None)
 
     async def get_with_ttl(self, key: str) -> Tuple[int, str]:
-        response = await self.client.get_item(
-            TableName=self.table_name,
-            Key={
-                "key": {
-                    "S": key
-                }
-            }
-        )
+        response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
 
         if "Item" in response:
             value = response["Item"].get("value", {}).get("S")
@@ -61,33 +56,37 @@ class DynamoBackend(Backend):
         return 0, None
 
     async def get(self, key) -> str:
-        response = await self.client.get_item(
-            TableName=self.table_name,
-            Key={
-                "key": {
-                    "S": key
-                }
-            }
-        )
+        response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
         if "Item" in response:
             return response["Item"].get("value", {}).get("S")
 
     async def set(self, key: str, value: str, expire: int = None):
-        ttl = { "ttl": { "N": str(int((datetime.datetime.now() + datetime.timedelta(seconds=expire)).timestamp())) } } if expire else {}
+        ttl = (
+            {
+                "ttl": {
+                    "N": str(
+                        int(
+                            (
+                                datetime.datetime.now() + datetime.timedelta(seconds=expire)
+                            ).timestamp()
+                        )
+                    )
+                }
+            }
+            if expire
+            else {}
+        )
 
         response = await self.client.put_item(
             TableName=self.table_name,
-            Item={**{
-                "key": {
-                    "S": key
+            Item={
+                **{
+                    "key": {"S": key},
+                    "value": {"S": value},
                 },
-                "value": {
-                    "S": value
-                },
-            }, **ttl
-            }
+                **ttl,
+            },
         )
 
     async def clear(self, namespace: str = None, key: str = None) -> int:
         raise NotImplementedError
-
