@@ -77,7 +77,7 @@ class DynamoBackend(Backend):
             else {}
         )
 
-        response = await self.client.put_item(
+        await self.client.put_item(
             TableName=self.table_name,
             Item={
                 **{
