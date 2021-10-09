@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 import aioredis
 import uvicorn
 from fastapi import FastAPI
@@ -29,6 +31,18 @@ async def index(request: Request, response: Response):
 @app.get("/clear")
 async def clear():
     return await FastAPICache.clear(namespace="test")
+
+
+@app.get("/date")
+@cache(namespace="test", expire=20)
+async def get_data(request: Request, response: Response):
+    return date.today()
+
+
+@app.get("/datetime")
+@cache(namespace="test", expire=20)
+async def get_datetime(request: Request, response: Response):
+    return datetime.now()
 
 
 @app.on_event("startup")

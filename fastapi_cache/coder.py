@@ -8,7 +8,7 @@ import pendulum
 from fastapi.encoders import jsonable_encoder
 
 CONVERTERS = {
-    "date": pendulum.parse,
+    "date": lambda x: pendulum.parse(x, exact=True),
     "datetime": lambda x: pendulum.parse(x, exact=True),
     "decimal": Decimal,
 }
@@ -17,12 +17,9 @@ CONVERTERS = {
 class JsonEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
-            if obj.tzinfo:
-                return {"val": obj.strftime("%Y-%m-%d %H:%M:%S%z"), "_spec_type": "datetime"}
-            else:
-                return {"val": obj.strftime("%Y-%m-%d %H:%M:%S"), "_spec_type": "datetime"}
+            return {"val": str(obj), "_spec_type": "datetime"}
         elif isinstance(obj, datetime.date):
-            return {"val": obj.strftime("%Y-%m-%d"), "_spec_type": "date"}
+            return {"val": str(obj), "_spec_type": "date"}
         elif isinstance(obj, Decimal):
             return {"val": str(obj), "_spec_type": "decimal"}
         else:
