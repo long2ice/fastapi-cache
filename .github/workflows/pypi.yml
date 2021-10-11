@@ -14,7 +14,7 @@ jobs:
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1.1.1
         with:
-          virtualenvs-create: true
+          virtualenvs-create: false
       - name: Run tests
         run: poetry run pytest
       - name: Build dists
