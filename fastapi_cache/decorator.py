@@ -45,12 +45,17 @@ def cache(
                 args=coder.encode(args),
                 kwargs=coder.encode(copy_kwargs),
             )
-            ttl, ret = await backend.get_with_ttl(cache_key)
+            try:
+                ttl, ret = await backend.get_with_ttl(cache_key)
+            except ConnectionResetError:
+                return await func(*args, **kwargs)
             if not request:
                 if ret is not None:
                     return coder.decode(ret)
                 ret = await func(*args, **kwargs)
-                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                await backend.set(
+                    cache_key, coder.encode(ret), expire or FastAPICache.get_expire()
+                )
                 return ret
 
             if request.method != "GET":
@@ -67,7 +72,9 @@ def cache(
                 return coder.decode(ret)
 
             ret = await func(*args, **kwargs)
-            await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+            await backend.set(
+                cache_key, coder.encode(ret), expire or FastAPICache.get_expire()
+            )
             return ret
 
         return inner
