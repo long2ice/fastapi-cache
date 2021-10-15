@@ -1,3 +1,4 @@
+import hashlib
 from typing import Optional
 
 from starlette.requests import Request
@@ -14,6 +15,11 @@ def default_key_builder(
 ):
     from fastapi_cache import FastAPICache
 
-    prefix = FastAPICache.get_prefix()
-    cache_key = f"{prefix}:{namespace}:{func.__module__}:{func.__name__}:{args}:{kwargs}"
+    prefix = f"{FastAPICache.get_prefix()}:{namespace}:"
+    cache_key = (
+        prefix
+        + hashlib.md5(  # nosec:B303
+            f"{func.__module__}:{func.__name__}:{args}:{kwargs}".encode()
+        ).hexdigest()
+    )
     return cache_key

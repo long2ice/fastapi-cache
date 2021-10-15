@@ -16,7 +16,7 @@ class MemcachedBackend(Backend):
         return await self.mcache.get(key, key.encode())
 
     async def set(self, key: str, value: str, expire: int = None):
-        return await self.mcache.set(key.encode(), value.encode(), exptime=expire)
+        return await self.mcache.set(key.encode(), value.encode(), exptime=expire or 0)
 
     async def clear(self, namespace: str = None, key: str = None):
         raise NotImplementedError
