@@ -31,13 +31,13 @@
 or
 
 ```shell
-> pip install fastapi-cache2[redis]
+> pip install "fastapi-cache2[redis]"
 ```
 
 or
 
 ```shell
-> pip install fastapi-cache2[memcache]
+> pip install "fastapi-cache2[memcache]"
 ```
 
 ## Usage
