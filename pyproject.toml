@@ -37,3 +37,7 @@ build-backend = "poetry.masonry.api"
 redis = ["aioredis"]
 memcache = ["aiomcache"]
 all = ["aioredis","aiomcache"]
+
+[tool.black]
+line-length = 100
+target-version = ['py36', 'py37', 'py38', 'py39']
