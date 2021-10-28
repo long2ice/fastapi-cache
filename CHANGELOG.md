@@ -5,6 +5,7 @@
 ### 0.1.7
 
 - Fix default json coder for datetime.
+- Add `enable` param to `init`.
 
 ### 0.1.6
 
