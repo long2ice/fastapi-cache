@@ -21,6 +21,7 @@ uvicorn = "*"
 aioredis = {version = "^2.0", optional = true}
 aiomcache = {version = "*", optional = true}
 pendulum = "*"
+aiobotocore = {version = "^1.4.1", optional = true}
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
@@ -36,6 +37,7 @@ build-backend = "poetry.masonry.api"
 [tool.poetry.extras]
 redis = ["aioredis"]
 memcache = ["aiomcache"]
+dynamodb = ["aiobotocore"]
 all = ["aioredis","aiomcache"]
 
 [tool.black]
