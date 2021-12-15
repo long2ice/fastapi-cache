@@ -42,7 +42,7 @@ def cache(
             cache_key = key_builder(
                 func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
             )
-            ttl, ret = await backend.get_with_ttl(cache_key)
+            ret = await backend.get(cache_key)
             if not request:
                 if ret is not None:
                     return coder.decode(ret)
@@ -55,7 +55,7 @@ def cache(
             if_none_match = request.headers.get("if-none-match")
             if ret is not None:
                 if response:
-                    response.headers["Cache-Control"] = f"max-age={ttl}"
+                    response.headers["Cache-Control"] = f"max-age={expire}"
                     etag = f"W/{hash(ret)}"
                     if if_none_match == etag:
                         response.status_code = 304
