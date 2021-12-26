@@ -1,39 +1,39 @@
 [tool.poetry]
-name = "fastapi-cache2"
-version = "0.1.7"
-description = "Cache for FastAPI"
 authors = ["long2ice <long2ice@gmail.com>", "Rushil Srivastava <rushu0922@gmail.com>"]
-license = "Apache-2.0"
-readme = "README.md"
-homepage = "https://github.com/rushilsrivastava/fastapi-cache"
-repository = "https://github.com/rushilsrivastava/fastapi-cache"
+description = "Cache for FastAPI"
 documentation = "https://github.com/rushilsrivastava/fastapi-cache"
+homepage = "https://github.com/rushilsrivastava/fastapi-cache"
+include = ["LICENSE", "README.md"]
 keywords = ["fastapi", "cache", "caching"]
+license = "Apache-2.0"
+name = "fastapi-cache2"
 packages = [
   {include = "fastapi_cache"},
 ]
-include = ["LICENSE", "README.md"]
+readme = "README.md"
+repository = "https://github.com/rushilsrivastava/fastapi-cache"
+version = "0.1.7"
 
 [tool.poetry.dependencies]
-python = "^3.7"
 aiomcache = {version = ">=0.6.0,<0.7.0", optional = true}
 aioredis = {version = ">=2.0.0,<2.1.0", optional = true}
 fastapi = ">=0.63.0,<0.80.0"
-uvicorn = ">=0.13.0,<0.16.0"
 pendulum = "^2.1.0"
+python = "^3.7"
+uvicorn = ">=0.13.0,<0.17.0"
 
 [tool.poetry.dev-dependencies]
+bandit = "^1.7.0"
 black = "^21.6b0"
 flake8 = "^3.9.2"
 isort = "^5.5.2"
 pytest = "^6.1.2"
-bandit = "^1.7.0"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core>=1.0.0"]
 
 [tool.poetry.extras]
-redis = ["aioredis"]
-memcache = ["aiomcache"]
 all = ["aioredis", "aiomcache"]
+memcache = ["aiomcache"]
+redis = ["aioredis"]
