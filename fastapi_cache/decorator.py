@@ -66,7 +66,7 @@ def cache(
             ret = await func(*args, **kwargs)
             encoded_ret = coder.encode(ret)
             await backend.set(cache_key, encoded_ret, expire)
-            response.headers["Cache-Control"] = f"private, max-age={expire}"
+            response.headers["Cache-Control"] = f"max-age={expire}"
             etag = f"W/{hash(encoded_ret)}"
             response.headers["ETag"] = etag
             return ret
