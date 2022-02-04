@@ -47,7 +47,7 @@ def cache(
                 if ret is not None:
                     return coder.decode(ret)
                 ret = await func(*args, **kwargs)
-                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                await backend.set(cache_key, coder.encode(ret), expire)
                 return ret
 
             if request.method != "GET":
@@ -64,7 +64,11 @@ def cache(
                 return coder.decode(ret)
 
             ret = await func(*args, **kwargs)
-            await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+            encoded_ret = coder.encode(ret)
+            await backend.set(cache_key, encoded_ret, expire)
+            response.headers["Cache-Control"] = f"private, max-age={expire}"
+            etag = f"W/{hash(encoded_ret)}"
+            response.headers["ETag"] = etag
             return ret
 
         return inner
