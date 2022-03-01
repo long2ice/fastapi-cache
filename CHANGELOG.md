@@ -2,11 +2,16 @@
 
 ## 0.1
 
+### 0.1.8
+
+- Support `dynamodb` backend.
+
 ### 0.1.7
 
 - Added event handling for new key and existing key
 - Added tests for custom_key_builder and event handling
 - Fix default json coder for datetime.
+- Add `enable` param to `init`.
 
 ### 0.1.6
 

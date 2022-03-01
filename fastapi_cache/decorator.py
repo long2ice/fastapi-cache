@@ -29,7 +29,9 @@ def cache(
             copy_kwargs = kwargs.copy()
             request = copy_kwargs.pop("request", None)
             response = copy_kwargs.pop("response", None)
-            if request and request.headers.get("Cache-Control") == "no-store":
+            if (
+                request and request.headers.get("Cache-Control") == "no-store"
+            ) or not FastAPICache.get_enable():
                 return await func(*args, **kwargs)
 
             coder = coder or FastAPICache.get_coder()

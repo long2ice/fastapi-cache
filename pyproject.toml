@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-cache2"
-version = "0.1.7"
+version = "0.1.8"
 description = "Cache for FastAPI"
 authors = ["long2ice <long2ice@gmail.com>"]
 license = "Apache-2.0"
@@ -26,6 +26,7 @@ pytest-asyncio = "^0.15.1"
 requests = "^2.26.0"
 httpx = "^0.19.0"
 pendulum = "*"
+aiobotocore = {version = "^1.4.1", optional = true}
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
@@ -41,4 +42,9 @@ build-backend = "poetry.masonry.api"
 [tool.poetry.extras]
 redis = ["aioredis"]
 memcache = ["aiomcache"]
+dynamodb = ["aiobotocore"]
 all = ["aioredis","aiomcache"]
+
+[tool.black]
+line-length = 100
+target-version = ['py36', 'py37', 'py38', 'py39']
