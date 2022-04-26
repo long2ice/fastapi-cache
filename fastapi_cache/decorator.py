@@ -1,6 +1,8 @@
 from functools import wraps
 from typing import Callable, Optional, Type
 
+from pydantic import BaseModel
+
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
 
@@ -45,7 +47,12 @@ def cache(
             ttl, ret = await backend.get_with_ttl(cache_key)
             if not request:
                 if ret is not None:
-                    return coder.decode(ret)
+                    parsed_ret = coder.decode(ret)
+                    if "return" in func.__annotations__:
+                        return_class = func.__annotations__["return"]
+                        if issubclass(return_class, BaseModel):
+                            return return_class(**parsed_ret)
+                    return parsed_ret
                 ret = await func(*args, **kwargs)
                 await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
                 return ret
