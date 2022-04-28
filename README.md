@@ -101,6 +101,8 @@ And if you want use `ETag` and `Cache-Control` features, you must pass `response
 
 You can also use `cache` as decorator like other cache tools to cache common function result.
 
+NOTE: `cache` will return a dict with the function result, unless the return type is annotated and is a BaseModel (pydantic), in which case it will return the model instance.
+
 ### Custom coder
 
 By default use `JsonCoder`, you can write custom coder to encode and decode cache result, just need inherit `fastapi_cache.coder.Coder`.

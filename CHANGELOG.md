@@ -2,6 +2,10 @@
 
 ## 0.1
 
+### 0.1.9
+
+- Return Pydantic model from cached methods (if possible)
+
 ### 0.1.8
 
 - Support `dynamodb` backend.
