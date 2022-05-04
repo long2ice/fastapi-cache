@@ -31,9 +31,7 @@ class DynamoBackend(Backend):
         self.region = region
 
     async def init(self):
-        self.client = await self.session.create_client(
-            "dynamodb", region_name=self.region
-        ).__aenter__()
+        self.client = await self.session.create_client("dynamodb", region_name=self.region).__aenter__()
 
     async def close(self):
         self.client = await self.client.__aexit__(None, None, None)
@@ -62,17 +60,7 @@ class DynamoBackend(Backend):
 
     async def set(self, key: str, value: str, expire: int = None):
         ttl = (
-            {
-                "ttl": {
-                    "N": str(
-                        int(
-                            (
-                                datetime.datetime.now() + datetime.timedelta(seconds=expire)
-                            ).timestamp()
-                        )
-                    )
-                }
-            }
+            {"ttl": {"N": str(int((datetime.datetime.now() + datetime.timedelta(seconds=expire)).timestamp()))}}
             if expire
             else {}
         )

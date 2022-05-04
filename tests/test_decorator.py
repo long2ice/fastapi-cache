@@ -46,5 +46,3 @@ async def test_get_model_returns_a_model():
     # Second time, when is cached, will return the cached value, parsing it to a model
     ret = await get_model()
     assert isinstance(ret, MyModel)
-
-

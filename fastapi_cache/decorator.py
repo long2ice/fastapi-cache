@@ -31,9 +31,7 @@ def cache(
             copy_kwargs = kwargs.copy()
             request = copy_kwargs.pop("request", None)
             response = copy_kwargs.pop("response", None)
-            if (
-                request and request.headers.get("Cache-Control") == "no-store"
-            ) or not FastAPICache.get_enable():
+            if (request and request.headers.get("Cache-Control") == "no-store") or not FastAPICache.get_enable():
                 return await func(*args, **kwargs)
 
             coder = coder or FastAPICache.get_coder()
@@ -41,9 +39,7 @@ def cache(
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
 
-            cache_key = key_builder(
-                func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
-            )
+            cache_key = key_builder(func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs)
             ttl, ret = await backend.get_with_ttl(cache_key)
             if not request:
                 if ret is not None:
