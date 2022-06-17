@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from aioredis import Redis
+from redis.asyncio.client import Redis
 
 from fastapi_cache.backends import Backend
 
