@@ -14,7 +14,6 @@ style: deps
 check: deps
 	@poetry run black $(checkfiles) || (echo "Please run 'make style' to auto-fix style issues" && false)
 	@poetry run flake8 $(checkfiles)
-	@poetry run bandit -r $(checkfiles)
 
 test: deps
 	$(py_warn) poetry run pytest
