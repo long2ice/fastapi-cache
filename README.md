@@ -51,7 +51,8 @@ or
 ### Quick Start
 
 ```python
-import aioredis
+import redis.asyncio as redis
+from redis.asyncio.connection import ConnectionPool
 from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import Response
@@ -76,8 +77,9 @@ async def index(request: Request, response: Response):
 
 @app.on_event("startup")
 async def startup():
-    redis =  aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    pool = ConnectionPool.from_url(url="redis://localhost")
+    r = redis.Redis(connection_pool=pool)
+    FastAPICache.init(RedisBackend(r), prefix="fastapi-cache")
 
 ```
 
