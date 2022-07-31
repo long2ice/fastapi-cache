@@ -34,7 +34,7 @@ requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
 [tool.poetry.extras]
-redis = ["aioredis"]
+redis = ["redis"]
 memcache = ["aiomcache"]
 dynamodb = ["aiobotocore"]
 all = ["redis","aiomcache"]
