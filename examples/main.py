@@ -1,4 +1,5 @@
 from datetime import date, datetime
+import time
 
 import redis.asyncio as redis
 import uvicorn
@@ -38,6 +39,13 @@ async def clear():
 @cache(namespace="test", expire=20)
 async def get_data(request: Request, response: Response):
     return date.today()
+
+
+@app.get("/blocking")
+@cache(namespace="test", expire=20)
+def blocking(request: Request, response: Response):
+    time.sleep(5)
+    return dict(ret=get_ret())
 
 
 @app.get("/datetime")
