@@ -7,11 +7,11 @@
 
 ## Introduction
 
-`fastapi-cache` is a tool to cache fastapi response and function result, with backends support `redis` and `memcache`.
+`fastapi-cache` is a tool to cache fastapi response and function result, with backends support `redis`, `memcache`, and `dynamodb`.
 
 ## Features
 
-- Support `redis` and `memcache` and `in-memory` backends.
+- Support `redis`, `memcache`, `dynamodb`, and `in-memory` backends.
 - Easily integration with `fastapi`.
 - Support http cache like `ETag` and `Cache-Control`.
 
@@ -20,6 +20,7 @@
 - `asyncio` environment.
 - `redis` if use `RedisBackend`.
 - `memcache` if use `MemcacheBackend`.
+- `aiobotocore` if use `DynamoBackend`.
 
 ## Install
 
@@ -30,13 +31,19 @@
 or
 
 ```shell
-> pip install fastapi-cache2[redis]
+> pip install "fastapi-cache2[redis]"
 ```
 
 or
 
 ```shell
-> pip install fastapi-cache2[memcache]
+> pip install "fastapi-cache2[memcache]"
+```
+
+or
+
+```shell
+> pip install "fastapi-cache2[dynamodb]"
 ```
 
 ## Usage

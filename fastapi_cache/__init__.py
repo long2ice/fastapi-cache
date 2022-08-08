@@ -11,6 +11,7 @@ class FastAPICache:
     _init = False
     _coder = None
     _key_builder = None
+    _enable = True
 
     @classmethod
     def init(
@@ -20,6 +21,7 @@ class FastAPICache:
         expire: int = None,
         coder: Coder = JsonCoder,
         key_builder: Callable = default_key_builder,
+        enable: bool = True,
     ):
         if cls._init:
             return
@@ -29,6 +31,7 @@ class FastAPICache:
         cls._expire = expire
         cls._coder = coder
         cls._key_builder = key_builder
+        cls._enable = enable
 
     @classmethod
     def get_backend(cls):
@@ -50,6 +53,10 @@ class FastAPICache:
     @classmethod
     def get_key_builder(cls):
         return cls._key_builder
+
+    @classmethod
+    def get_enable(cls):
+        return cls._enable
 
     @classmethod
     async def clear(cls, namespace: str = None, key: str = None):

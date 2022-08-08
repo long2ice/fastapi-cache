@@ -2,6 +2,19 @@
 
 ## 0.1
 
+### 0.1.9
+
+- Replace `aioredis` with `redis-py`.
+
+### 0.1.8
+
+- Support `dynamodb` backend.
+
+### 0.1.7
+
+- Fix default json coder for datetime.
+- Add `enable` param to `init`.
+
 ### 0.1.6
 
 - Fix redis cache.
