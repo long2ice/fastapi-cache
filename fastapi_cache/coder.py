@@ -64,4 +64,4 @@ class PickleCoder(Coder):
 
     @classmethod
     def decode(cls, value: Any):
-        return pickle.loads(value)  # nosec:B403
+        return pickle.loads(value)  # nosec:B403,B301
