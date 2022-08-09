@@ -2,6 +2,10 @@
 
 ## 0.1
 
+### 0.1.10
+
+- Add `Cache-Control:no-cache` support.
+
 ### 0.1.9
 
 - Replace `aioredis` with `redis-py`.
