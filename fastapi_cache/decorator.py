@@ -36,6 +36,18 @@ def cache(
             (param for param in signature.parameters.values() if param.annotation is Request),
             None,
         )
+        if not request_param:
+            signature = signature.replace(
+                parameters=[
+                    *signature.parameters.values(),
+                    inspect.Parameter(
+                        name="request",
+                        annotation=Request,
+                        kind=inspect.Parameter.KEYWORD_ONLY,
+                    ),
+                ]
+            )
+        func.__signature__ = signature
 
         @wraps(func)
         async def inner(*args, **kwargs):
@@ -92,20 +104,6 @@ def cache(
 
             await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
             return ret
-
-        if not request_param:
-            inner_signature = inspect.signature(inner)
-            inner_signature = inner_signature.replace(
-                parameters=[
-                    *inner_signature.parameters.values(),
-                    inspect.Parameter(
-                        name="request",
-                        annotation=Request,
-                        kind=inspect.Parameter.KEYWORD_ONLY,
-                    )
-                ]
-            )
-            inner.__signature__ = inner_signature
 
         return inner
 
