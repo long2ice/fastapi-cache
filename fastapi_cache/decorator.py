@@ -1,7 +1,9 @@
 import asyncio
-from functools import wraps, partial
 import inspect
+from functools import wraps, partial
 from typing import TYPE_CHECKING, Callable, Optional, Type
+
+from starlette.requests import Request
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
@@ -29,13 +31,24 @@ def cache(
     """
 
     def wrapper(func):
+        signature = inspect.signature(func)
+        request_param = next(
+            (param for param in signature.parameters.values() if param.annotation is Request),
+            None,
+        )
+
         @wraps(func)
         async def inner(*args, **kwargs):
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
             copy_kwargs = kwargs.copy()
-            request = copy_kwargs.pop("request", None)
+
+            if request_param:
+                request = copy_kwargs[request_param.name]
+            else:
+                del kwargs["request"]
+                request = copy_kwargs.pop("response", None)
             response = copy_kwargs.pop("response", None)
             if (
                 request and request.headers.get("Cache-Control") == "no-store"
@@ -79,6 +92,20 @@ def cache(
 
             await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
             return ret
+
+        if not request_param:
+            inner_signature = inspect.signature(inner)
+            inner_signature = inner_signature.replace(
+                parameters=[
+                    *inner_signature.parameters.values(),
+                    inspect.Parameter(
+                        name="request",
+                        annotation=Request,
+                        kind=inspect.Parameter.KEYWORD_ONLY,
+                    )
+                ]
+            )
+            inner.__signature__ = inner_signature
 
         return inner
 

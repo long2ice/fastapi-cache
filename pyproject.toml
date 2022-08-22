@@ -28,6 +28,8 @@ flake8 = "*"
 isort = "*"
 black = "*"
 pytest = "*"
+httpx = "^0.23.0"
+trio = "^0.21.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
