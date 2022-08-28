@@ -22,6 +22,7 @@ redis = { version = "^4.2.0rc1", optional = true }
 aiomcache = { version = "*", optional = true }
 pendulum = "*"
 aiobotocore = { version = "^1.4.1", optional = true }
+diskcache = "^5.4.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "*"
