@@ -16,7 +16,7 @@ version = "0.1.7"
 
 [tool.poetry.dependencies]
 aiomcache = {version = ">=0.6.0,<0.8.0", optional = true}
-fastapi = ">=0.63.0,<0.80.0"
+fastapi = ">=0.63.0,<0.90.0"
 pendulum = "^2.1.0"
 python = "^3.7"
 redis = {version = ">=4.2.0rc1,<4.4.0", optional = true}
