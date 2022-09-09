@@ -1,13 +1,11 @@
-import asyncio
-from functools import wraps, partial
 import inspect
-from typing import TYPE_CHECKING, Callable, Optional, Type
+from functools import wraps
+from typing import Callable, Optional, Type
+
+from fastapi.concurrency import run_in_threadpool
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
-
-if TYPE_CHECKING:
-    import concurrent.futures
 
 
 def cache(
@@ -15,7 +13,6 @@ def cache(
     coder: Type[Coder] = None,
     key_builder: Callable = None,
     namespace: Optional[str] = "",
-    executor: Optional["concurrent.futures.Executor"] = None,
 ):
     """
     cache all function
@@ -23,7 +20,6 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
-    :param executor:
 
     :return:
     """
@@ -74,8 +70,7 @@ def cache(
             if inspect.iscoroutinefunction(func):
                 ret = await func(*args, **kwargs)
             else:
-                loop = asyncio.get_event_loop()
-                ret = await loop.run_in_executor(executor, partial(func, *args, **kwargs))
+                ret = await run_in_threadpool(func, *args, **kwargs)
 
             await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
             return ret
