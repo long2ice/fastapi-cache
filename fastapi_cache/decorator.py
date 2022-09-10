@@ -3,6 +3,8 @@ from functools import wraps
 from typing import Callable, Optional, Type
 
 from fastapi.concurrency import run_in_threadpool
+from starlette.requests import Request
+from starlette.responses import Response
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
@@ -25,6 +27,36 @@ def cache(
     """
 
     def wrapper(func):
+        signature = inspect.signature(func)
+        request_param = next(
+            (param for param in signature.parameters.values() if param.annotation is Request),
+            None,
+        )
+        response_param = next(
+            (param for param in signature.parameters.values() if param.annotation is Response),
+            None,
+        )
+        parameters = [*signature.parameters.values()]
+        if not request_param:
+            parameters.append(
+                inspect.Parameter(
+                    name="request",
+                    annotation=Request,
+                    kind=inspect.Parameter.KEYWORD_ONLY,
+                ),
+            )
+        if not response_param:
+            parameters.append(
+                inspect.Parameter(
+                    name="response",
+                    annotation=Response,
+                    kind=inspect.Parameter.KEYWORD_ONLY,
+                ),
+            )
+        if parameters:
+            signature = signature.replace(parameters=parameters)
+        func.__signature__ = signature
+
         @wraps(func)
         async def inner(*args, **kwargs):
             nonlocal coder
@@ -66,7 +98,10 @@ def cache(
                         return response
                     response.headers["ETag"] = etag
                 return coder.decode(ret)
-
+            if not request_param:
+                kwargs.pop("request")
+            if not response_param:
+                kwargs.pop("response")
             if inspect.iscoroutinefunction(func):
                 ret = await func(*args, **kwargs)
             else:

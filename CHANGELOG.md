@@ -1,5 +1,11 @@
 # ChangeLog
 
+## 0.2
+
+### 0.2.0
+
+- Make `request` and `response` optional.
+
 ## 0.1
 
 ### 0.1.9

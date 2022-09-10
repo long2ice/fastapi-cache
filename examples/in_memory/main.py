@@ -1,5 +1,4 @@
-from datetime import date, datetime
-
+import pendulum
 import uvicorn
 from fastapi import FastAPI
 from starlette.requests import Request
@@ -22,8 +21,8 @@ async def get_ret():
 
 
 @app.get("/")
-@cache(namespace="test", expire=20)
-async def index(request: Request, response: Response):
+@cache(namespace="test", expire=10)
+async def index():
     return dict(ret=await get_ret())
 
 
@@ -33,15 +32,15 @@ async def clear():
 
 
 @app.get("/date")
-@cache(namespace="test", expire=20)
-async def get_data(request: Request, response: Response):
-    return date.today()
+@cache(namespace="test", expire=10)
+async def get_data():
+    return pendulum.today()
 
 
 @app.get("/datetime")
-@cache(namespace="test", expire=20)
+@cache(namespace="test", expire=2)
 async def get_datetime(request: Request, response: Response):
-    return datetime.now()
+    return {"now": pendulum.now()}
 
 
 @app.on_event("startup")

@@ -1,6 +1,6 @@
-from datetime import date, datetime
 import time
 
+import pendulum
 import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI
@@ -25,8 +25,8 @@ async def get_ret():
 
 
 @app.get("/")
-@cache(namespace="test", expire=20)
-async def index(request: Request, response: Response):
+@cache(namespace="test", expire=10)
+async def index():
     return dict(ret=await get_ret())
 
 
@@ -36,27 +36,28 @@ async def clear():
 
 
 @app.get("/date")
-@cache(namespace="test", expire=20)
+@cache(namespace="test", expire=10)
 async def get_data(request: Request, response: Response):
-    return date.today()
+    return pendulum.today()
 
 
 @app.get("/blocking")
-@cache(namespace="test", expire=20)
-def blocking(request: Request, response: Response):
+@cache(namespace="test", expire=10)
+def blocking():
     time.sleep(5)
     return dict(ret=get_ret())
 
 
 @app.get("/datetime")
-@cache(namespace="test", expire=20)
+@cache(namespace="test", expire=2)
 async def get_datetime(request: Request, response: Response):
-    return datetime.now()
+    print(request, response)
+    return pendulum.now()
 
 
 @app.on_event("startup")
 async def startup():
-    pool = ConnectionPool.from_url(url="redis://localhost")
+    pool = ConnectionPool.from_url(url="redis://redis")
     r = redis.Redis(connection_pool=pool)
     FastAPICache.init(RedisBackend(r), prefix="fastapi-cache")
 
