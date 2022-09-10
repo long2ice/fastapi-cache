@@ -2,6 +2,7 @@ from typing import Callable
 
 from fastapi_cache.coder import Coder, JsonCoder
 from fastapi_cache.key_builder import default_key_builder
+from fastapi_cache.ctx import cache_ctx
 
 
 class FastAPICache:

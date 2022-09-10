@@ -1,15 +1,14 @@
 from datetime import date, datetime
 
 import uvicorn
-from fastapi import FastAPI
-from starlette.requests import Request
-from starlette.responses import Response
+from fastapi import FastAPI, Depends
 
-from fastapi_cache import FastAPICache
+from fastapi_cache import FastAPICache, cache_ctx
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
 
-app = FastAPI()
+
+app = FastAPI(dependencies=[Depends(cache_ctx)])
 
 ret = 0
 
@@ -23,7 +22,7 @@ async def get_ret():
 
 @app.get("/")
 @cache(namespace="test", expire=20)
-async def index(request: Request, response: Response):
+async def index():
     return dict(ret=await get_ret())
 
 
@@ -34,13 +33,13 @@ async def clear():
 
 @app.get("/date")
 @cache(namespace="test", expire=20)
-async def get_data(request: Request, response: Response):
+async def get_data():
     return date.today()
 
 
 @app.get("/datetime")
 @cache(namespace="test", expire=20)
-async def get_datetime(request: Request, response: Response):
+async def get_datetime():
     return datetime.now()
 
 

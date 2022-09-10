@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Callable, Optional, Type
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
+from fastapi_cache.ctx import get_cache_ctx
+
 
 if TYPE_CHECKING:
     import concurrent.futures
@@ -35,8 +37,11 @@ def cache(
             nonlocal expire
             nonlocal key_builder
             copy_kwargs = kwargs.copy()
-            request = copy_kwargs.pop("request", None)
-            response = copy_kwargs.pop("response", None)
+
+            ctx_request, ctx_response = get_cache_ctx()
+            request = copy_kwargs.pop("request", ctx_request)
+            response = copy_kwargs.pop("response", ctx_response)
+
             if (
                 request and request.headers.get("Cache-Control") == "no-store"
             ) or not FastAPICache.get_enable():
