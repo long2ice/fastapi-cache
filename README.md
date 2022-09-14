@@ -52,7 +52,6 @@ or
 ### Quick Start
 
 ```python
-import aioredis
 from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import Response
@@ -60,6 +59,8 @@ from starlette.responses import Response
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
+
+from redis import asyncio as aioredis
 
 app = FastAPI()
 
