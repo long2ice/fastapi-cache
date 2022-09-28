@@ -2,6 +2,10 @@
 
 ## 0.2
 
+### 0.2.1
+
+- Support cache jinja2 template response.
+
 ### 0.2.0
 
 - Make `request` and `response` optional.
