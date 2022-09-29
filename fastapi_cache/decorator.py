@@ -66,9 +66,9 @@ def cache(
             nonlocal key_builder
             copy_kwargs = kwargs.copy()
             if key_builder_exclude_field:
-                for k in kwargs.keys():
-                    if k in key_builder_exclude_field:
-                        copy_kwargs.pop(k)
+                for key in kwargs.keys():
+                    if key in key_builder_exclude_field:
+                        copy_kwargs.pop(key)
             request = copy_kwargs.pop("request", None)
             response = copy_kwargs.pop("response", None)
             if (
