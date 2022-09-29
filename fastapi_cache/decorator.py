@@ -1,6 +1,6 @@
 import inspect
 from functools import wraps
-from typing import Callable, Optional, Type
+from typing import Callable, Optional, Type, List
 
 from fastapi.concurrency import run_in_threadpool
 from starlette.requests import Request
@@ -15,6 +15,7 @@ def cache(
     coder: Type[Coder] = None,
     key_builder: Callable = None,
     namespace: Optional[str] = "",
+    key_builder_exclude_field: Optional[List[str]] = None
 ):
     """
     cache all function
@@ -22,6 +23,7 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param key_builder_exclude_field:
 
     :return:
     """
@@ -63,6 +65,10 @@ def cache(
             nonlocal expire
             nonlocal key_builder
             copy_kwargs = kwargs.copy()
+            if key_builder_exclude_field:
+                for k in kwargs.keys():
+                    if k in key_builder_exclude_field:
+                        copy_kwargs.pop(k)
             request = copy_kwargs.pop("request", None)
             response = copy_kwargs.pop("response", None)
             if (
