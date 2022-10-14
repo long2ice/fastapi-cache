@@ -46,8 +46,8 @@ async def get_data(request: Request, response: Response):
 @app.get("/blocking")
 @cache(namespace="test", expire=10)
 def blocking():
-    time.sleep(5)
-    return dict(ret=get_ret())
+    time.sleep(2)
+    return dict(ret=42)
 
 
 @app.get("/datetime")
