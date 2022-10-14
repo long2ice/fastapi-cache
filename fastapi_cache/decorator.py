@@ -65,6 +65,13 @@ def cache(
 
             async def ensure_async_func(*args, **kwargs):
                 """Run cached sync functions in thread pool just like FastAPI."""
+                # if the wrapped function does NOT have request or response in its function signature,
+                # make sure we don't pass them in as keyword arguments
+                if not request_param:
+                    kwargs.pop("request")
+                if not response_param:
+                    kwargs.pop("response")
+
                 if inspect.iscoroutinefunction(func):
                     # async, return as is.
                     # unintuitively, we have to await once here, so that caller
@@ -114,10 +121,6 @@ def cache(
                         return response
                     response.headers["ETag"] = etag
                 return coder.decode(ret)
-            if not request_param:
-                kwargs.pop("request")
-            if not response_param:
-                kwargs.pop("response")
 
             ret = await ensure_async_func(*args, **kwargs)
 
