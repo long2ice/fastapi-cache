@@ -41,11 +41,13 @@ async def get_data(request: Request, response: Response):
     return pendulum.today()
 
 
+# Note: This function MUST be sync to demonstrate fastapi-cache's correct handling,
+# i.e. running cached sync functions in threadpool just like FastAPI itself!
 @app.get("/blocking")
 @cache(namespace="test", expire=10)
-async def blocking():
+def blocking():
     time.sleep(5)
-    return dict(ret=await get_ret())
+    return dict(ret=get_ret())
 
 
 @app.get("/datetime")
