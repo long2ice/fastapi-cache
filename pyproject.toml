@@ -29,6 +29,7 @@ isort = "*"
 black = "*"
 pytest = "*"
 requests = "*"
+coverage = "^6.5.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
