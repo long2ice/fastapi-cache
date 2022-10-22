@@ -39,7 +39,7 @@ def object_hook(obj: Any) -> Any:
 
 class Coder:
     @classmethod
-    def encode(cls, value: Any) -> Union[str, bytes]:
+    def encode(cls, value: Any) -> str:
         raise NotImplementedError
 
     @classmethod
@@ -59,9 +59,9 @@ class JsonCoder(Coder):
 
 class PickleCoder(Coder):
     @classmethod
-    def encode(cls, value: Any) -> Union[str, bytes]:
-        return pickle.dumps(value)
+    def encode(cls, value: Any) -> str:
+        return str(pickle.dumps(value))
 
     @classmethod
     def decode(cls, value: Any) -> Any:
-        return pickle.loads(value)  # nosec:B403,B301
+        return pickle.loads(bytes(value))  # nosec:B403,B301
