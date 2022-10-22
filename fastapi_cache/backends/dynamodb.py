@@ -1,6 +1,7 @@
 import datetime
-from typing import Tuple
+from typing import Tuple, Optional
 
+from aiobotocore.client import AioBaseClient
 from aiobotocore.session import get_session
 
 from fastapi_cache.backends import Backend
@@ -24,18 +25,18 @@ class DynamoBackend(Backend):
         >> FastAPICache.init(dynamodb)
     """
 
-    def __init__(self, table_name, region=None):
+    def __init__(self, table_name: str, region: Optional[str] = None) -> None:
         self.session = get_session()
-        self.client = None  # Needs async init
+        self.client: Optional[AioBaseClient] = None  # Needs async init
         self.table_name = table_name
         self.region = region
 
-    async def init(self):
+    async def init(self) -> None:
         self.client = await self.session.create_client(
             "dynamodb", region_name=self.region
         ).__aenter__()
 
-    async def close(self):
+    async def close(self) -> None:
         self.client = await self.client.__aexit__(None, None, None)
 
     async def get_with_ttl(self, key: str) -> Tuple[int, str]:
@@ -55,12 +56,12 @@ class DynamoBackend(Backend):
 
         return 0, None
 
-    async def get(self, key) -> str:
+    async def get(self, key: str) -> str:
         response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
         if "Item" in response:
             return response["Item"].get("value", {}).get("S")
 
-    async def set(self, key: str, value: str, expire: int = None):
+    async def set(self, key: str, value: str, expire: Optional[int] = None) -> None:
         ttl = (
             {
                 "ttl": {
@@ -88,5 +89,5 @@ class DynamoBackend(Backend):
             },
         )
 
-    async def clear(self, namespace: str = None, key: str = None) -> int:
+    async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
         raise NotImplementedError

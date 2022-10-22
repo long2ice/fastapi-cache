@@ -1,6 +1,6 @@
 import inspect
 from functools import wraps
-from typing import Callable, Optional, Type
+from typing import Callable, Optional, Type, Any
 
 from fastapi.concurrency import run_in_threadpool
 from starlette.requests import Request
@@ -11,11 +11,11 @@ from fastapi_cache.coder import Coder
 
 
 def cache(
-    expire: int = None,
-    coder: Type[Coder] = None,
-    key_builder: Callable = None,
+    expire: Optional[int] = None,
+    coder: Optional[Type[Coder]] = None,
+    key_builder: Optional[Callable] = None,
     namespace: Optional[str] = "",
-):
+) -> Callable:
     """
     cache all function
     :param namespace:
@@ -26,7 +26,7 @@ def cache(
     :return:
     """
 
-    def wrapper(func):
+    def wrapper(func: Callable) -> Callable:
         signature = inspect.signature(func)
         request_param = next(
             (param for param in signature.parameters.values() if param.annotation is Request),
@@ -55,15 +55,15 @@ def cache(
             )
         if parameters:
             signature = signature.replace(parameters=parameters)
-        func.__signature__ = signature
+        func.__signature__ = signature  # type: ignore
 
         @wraps(func)
-        async def inner(*args, **kwargs):
+        async def inner(*args: Any, **kwargs: Any) -> Any:
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
 
-            async def ensure_async_func(*args, **kwargs):
+            async def ensure_async_func(*args: Any, **kwargs: Any) -> Any:
                 """Run cached sync functions in thread pool just like FastAPI."""
                 # if the wrapped function does NOT have request or response in its function signature,
                 # make sure we don't pass them in as keyword arguments
@@ -82,7 +82,6 @@ def cache(
                     # sync, wrap in thread and return async
                     # see above why we have to await even although caller also awaits.
                     return await run_in_threadpool(func, *args, **kwargs)
-
 
             copy_kwargs = kwargs.copy()
             request = copy_kwargs.pop("request", None)
