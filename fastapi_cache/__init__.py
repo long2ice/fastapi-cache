@@ -35,13 +35,23 @@ class FastAPICache:
         cls._enable = enable
 
     @classmethod
+    def reset(cls) -> None:
+        cls._init = False
+        cls._backend = None
+        cls._prefix = None
+        cls._expire = None
+        cls._coder = None
+        cls._key_builder = None
+        cls._enable = True
+
+    @classmethod
     def get_backend(cls) -> Backend:
         assert cls._backend, "You must call init first!"  # nosec: B101
         return cls._backend
 
     @classmethod
     def get_prefix(cls) -> str:
-        assert cls._prefix, "You must call init first!"  # nosec: B101
+        assert cls._prefix is not None, "You must call init first!"  # nosec: B101
         return cls._prefix
 
     @classmethod
@@ -64,6 +74,6 @@ class FastAPICache:
 
     @classmethod
     async def clear(cls, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
-        assert cls._backend and cls._prefix, "You must call init first!"  # nosec: B101
+        assert cls._backend and cls._prefix is not None, "You must call init first!"  # nosec: B101
         namespace = cls._prefix + (":" + namespace if namespace else "")
         return await cls._backend.clear(namespace, key)
