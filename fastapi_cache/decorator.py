@@ -1,6 +1,11 @@
 import inspect
+import sys
 from functools import wraps
-from typing import Callable, Optional, Type
+from typing import Any, Awaitable, Callable, Optional, TypeVar
+if sys.version_info >= (3, 10):
+    from typing import ParamSpec
+else:
+    from typing_extensions import ParamSpec
 
 from fastapi.concurrency import run_in_threadpool
 from starlette.requests import Request
@@ -10,12 +15,16 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
 
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
 def cache(
-    expire: int = None,
-    coder: Type[Coder] = None,
-    key_builder: Callable = None,
+    expire: Optional[int] = None,
+    coder: Optional[Coder] = None,
+    key_builder: Optional[Callable[..., Any]] = None,
     namespace: Optional[str] = "",
-):
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     cache all function
     :param namespace:
@@ -26,7 +35,7 @@ def cache(
     :return:
     """
 
-    def wrapper(func):
+    def wrapper(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         signature = inspect.signature(func)
         request_param = next(
             (param for param in signature.parameters.values() if param.annotation is Request),
@@ -58,12 +67,12 @@ def cache(
         func.__signature__ = signature
 
         @wraps(func)
-        async def inner(*args, **kwargs):
+        async def inner(*args: P.args, **kwargs: P.kwargs) -> R:
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
 
-            async def ensure_async_func(*args, **kwargs):
+            async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
                 # if the wrapped function does NOT have request or response in its function signature,
                 # make sure we don't pass them in as keyword arguments
