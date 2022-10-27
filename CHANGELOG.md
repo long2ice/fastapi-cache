@@ -5,6 +5,7 @@
 ### 0.2.0
 
 - Make `request` and `response` optional.
+- Add typing info to the `cache` decorator.
 
 ## 0.1
 

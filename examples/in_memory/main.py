@@ -33,7 +33,7 @@ async def clear():
 
 @app.get("/date")
 @cache(namespace="test", expire=10)
-async def get_data():
+async def get_date():
     return pendulum.today()
 
 
@@ -41,6 +41,13 @@ async def get_data():
 @cache(namespace="test", expire=2)
 async def get_datetime(request: Request, response: Response):
     return {"now": pendulum.now()}
+
+@app.get("/sync-me")
+@cache(namespace="test")
+def sync_me():
+    # as per the fastapi docs, this sync function is wrapped in a thread,
+    # thereby converted to async. fastapi-cache does the same.
+    return 42
 
 
 @app.on_event("startup")

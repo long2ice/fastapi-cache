@@ -1,6 +1,12 @@
 import inspect
+import sys
 from functools import wraps
-from typing import Callable, Optional, Type, List
+from typing import Any, Awaitable, Callable, Optional, TypeVar, List
+
+if sys.version_info >= (3, 10):
+    from typing import ParamSpec
+else:
+    from typing_extensions import ParamSpec
 
 from fastapi.concurrency import run_in_threadpool
 from starlette.requests import Request
@@ -10,13 +16,17 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
 
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
 def cache(
-    expire: int = None,
-    coder: Type[Coder] = None,
-    key_builder: Callable = None,
+    expire: Optional[int] = None,
+    coder: Optional[Coder] = None,
+    key_builder: Optional[Callable[..., Any]] = None,
     namespace: Optional[str] = "",
     key_builder_exclude_field: Optional[List[str]] = None
-):
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     cache all function
     :param namespace:
@@ -28,7 +38,7 @@ def cache(
     :return:
     """
 
-    def wrapper(func):
+    def wrapper(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         signature = inspect.signature(func)
         request_param = next(
             (param for param in signature.parameters.values() if param.annotation is Request),
@@ -60,10 +70,31 @@ def cache(
         func.__signature__ = signature
 
         @wraps(func)
-        async def inner(*args, **kwargs):
+        async def inner(*args: P.args, **kwargs: P.kwargs) -> R:
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
+
+            async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
+                """Run cached sync functions in thread pool just like FastAPI."""
+                # if the wrapped function does NOT have request or response in its function signature,
+                # make sure we don't pass them in as keyword arguments
+                if not request_param:
+                    kwargs.pop("request")
+                if not response_param:
+                    kwargs.pop("response")
+
+                if inspect.iscoroutinefunction(func):
+                    # async, return as is.
+                    # unintuitively, we have to await once here, so that caller
+                    # does not have to await twice. See
+                    # https://stackoverflow.com/a/59268198/532513
+                    return await func(*args, **kwargs)
+                else:
+                    # sync, wrap in thread and return async
+                    # see above why we have to await even although caller also awaits.
+                    return await run_in_threadpool(func, *args, **kwargs)
+
             copy_kwargs = kwargs.copy()
             if key_builder_exclude_field:
                 for key in kwargs.keys():
@@ -74,7 +105,7 @@ def cache(
             if (
                 request and request.headers.get("Cache-Control") == "no-store"
             ) or not FastAPICache.get_enable():
-                return await func(*args, **kwargs)
+                return await ensure_async_func(*args, **kwargs)
 
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
@@ -88,12 +119,13 @@ def cache(
             if not request:
                 if ret is not None:
                     return coder.decode(ret)
-                ret = await func(*args, **kwargs)
+                ret = await ensure_async_func(*args, **kwargs)
                 await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
                 return ret
 
             if request.method != "GET":
-                return await func(request, *args, **kwargs)
+                return await ensure_async_func(request, *args, **kwargs)
+
             if_none_match = request.headers.get("if-none-match")
             if ret is not None:
                 if response:
@@ -104,14 +136,8 @@ def cache(
                         return response
                     response.headers["ETag"] = etag
                 return coder.decode(ret)
-            if not request_param:
-                kwargs.pop("request")
-            if not response_param:
-                kwargs.pop("response")
-            if inspect.iscoroutinefunction(func):
-                ret = await func(*args, **kwargs)
-            else:
-                ret = await run_in_threadpool(func, *args, **kwargs)
+
+            ret = await ensure_async_func(*args, **kwargs)
 
             await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
             return ret

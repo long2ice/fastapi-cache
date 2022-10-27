@@ -143,6 +143,14 @@ async def index():
 `InMemoryBackend` store cache data in memory and use lazy delete, which mean if you don't access it after cached, it
 will not delete automatically.
 
+## Tests and coverage
+
+```shell
+coverage run -m pytest
+coverage html
+xdg-open htmlcov/index.html
+```
+
 ## License
 
 This project is licensed under the [Apache-2.0](https://github.com/long2ice/fastapi-cache/blob/master/LICENSE) License.
