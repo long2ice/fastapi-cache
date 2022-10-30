@@ -1,6 +1,11 @@
 import inspect
+import sys
 from functools import wraps
-from typing import Callable, Optional, Type, Any
+from typing import Any, Awaitable, Callable, Optional, TypeVar
+if sys.version_info >= (3, 10):
+    from typing import ParamSpec
+else:
+    from typing_extensions import ParamSpec
 
 from fastapi.concurrency import run_in_threadpool
 from starlette.requests import Request
@@ -10,12 +15,16 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
 
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
 def cache(
     expire: Optional[int] = None,
-    coder: Optional[Type[Coder]] = None,
-    key_builder: Optional[Callable] = None,
+    coder: Optional[Coder] = None,
+    key_builder: Optional[Callable[..., Any]] = None,
     namespace: Optional[str] = "",
-) -> Callable:
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     cache all function
     :param namespace:
@@ -26,7 +35,7 @@ def cache(
     :return:
     """
 
-    def wrapper(func: Callable) -> Callable:
+    def wrapper(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         signature = inspect.signature(func)
         request_param = next(
             (param for param in signature.parameters.values() if param.annotation is Request),
@@ -55,15 +64,15 @@ def cache(
             )
         if parameters:
             signature = signature.replace(parameters=parameters)
-        func.__signature__ = signature  # type: ignore
+        func.__signature__ = signature
 
         @wraps(func)
-        async def inner(*args: Any, **kwargs: Any) -> Any:
+        async def inner(*args: P.args, **kwargs: P.kwargs) -> R:
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
 
-            async def ensure_async_func(*args: Any, **kwargs: Any) -> Any:
+            async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
                 # if the wrapped function does NOT have request or response in its function signature,
                 # make sure we don't pass them in as keyword arguments
@@ -82,6 +91,7 @@ def cache(
                     # sync, wrap in thread and return async
                     # see above why we have to await even although caller also awaits.
                     return await run_in_threadpool(func, *args, **kwargs)
+
 
             copy_kwargs = kwargs.copy()
             request = copy_kwargs.pop("request", None)
