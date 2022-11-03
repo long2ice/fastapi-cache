@@ -6,6 +6,7 @@ from typing import Any
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
+from starlette.templating import _TemplateResponse as TemplateResponse
 
 CONVERTERS = {
     "date": lambda x: pendulum.parse(x, exact=True),
@@ -60,6 +61,8 @@ class JsonCoder(Coder):
 class PickleCoder(Coder):
     @classmethod
     def encode(cls, value: Any):
+        if isinstance(value, TemplateResponse):
+            value = value.body
         return pickle.dumps(value)
 
     @classmethod
