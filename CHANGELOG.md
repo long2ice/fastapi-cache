@@ -2,12 +2,20 @@
 
 ## 0.2
 
+### 0.2.1
+
+- Support cache jinja2 template response.
+
 ### 0.2.0
 
 - Make `request` and `response` optional.
 - Add typing info to the `cache` decorator.
 
 ## 0.1
+
+### 0.1.10
+
+- Add `Cache-Control:no-cache` support.
 
 ### 0.1.9
 

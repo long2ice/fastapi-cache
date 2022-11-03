@@ -102,8 +102,9 @@ def cache(
                         copy_kwargs.pop(key)
             request = copy_kwargs.pop("request", None)
             response = copy_kwargs.pop("response", None)
+
             if (
-                request and request.headers.get("Cache-Control") == "no-store"
+                request and request.headers.get("Cache-Control") in ("no-store", "no-cache")
             ) or not FastAPICache.get_enable():
                 return await ensure_async_func(*args, **kwargs)
 
@@ -112,9 +113,25 @@ def cache(
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
 
-            cache_key = key_builder(
-                func, namespace, request=request, response=response, args=args, kwargs=copy_kwargs
-            )
+            if inspect.iscoroutinefunction(key_builder):
+                cache_key = await key_builder(
+                    func,
+                    namespace,
+                    request=request,
+                    response=response,
+                    args=args,
+                    kwargs=copy_kwargs
+                )
+            else:
+                cache_key = key_builder(
+                    func,
+                    namespace,
+                    request=request,
+                    response=response,
+                    args=args,
+                    kwargs=copy_kwargs
+                )
+
             ttl, ret = await backend.get_with_ttl(cache_key)
             if not request:
                 if ret is not None:
