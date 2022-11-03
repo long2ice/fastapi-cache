@@ -97,9 +97,8 @@ def cache(
 
             copy_kwargs = kwargs.copy()
             if key_builder_exclude_field:
-                for key in kwargs.keys():
-                    if key in key_builder_exclude_field:
-                        copy_kwargs.pop(key)
+                for key in key_builder_exclude_field:
+                    copy_kwargs.pop(key, None)
             request = copy_kwargs.pop("request", None)
             response = copy_kwargs.pop("response", None)
 
