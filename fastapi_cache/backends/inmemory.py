@@ -20,7 +20,7 @@ class InMemoryBackend(Backend):
     def _now(self) -> int:
         return int(time.time())
 
-    def _get(self, key: str) -> Value | None:
+    def _get(self, key: str) -> Optional[Value]:
         v = self._store.get(key)
         if v:
             if v.ttl_ts < self._now:
