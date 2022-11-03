@@ -97,7 +97,7 @@ def cache(
             request: Optional[Request] = copy_kwargs.pop("request", None)
             response: Optional[Response] = copy_kwargs.pop("response", None)
             if (
-                request and request.headers.get("Cache-Control") == "no-store"
+                request and request.headers.get("Cache-Control") in ("no-store", "no-cache")
             ) or not FastAPICache.get_enable():
                 return await ensure_async_func(*args, **kwargs)
 
