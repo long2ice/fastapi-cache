@@ -6,6 +6,7 @@ from typing import Any, Dict, Union
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
+from starlette.responses import JSONResponse
 from starlette.templating import _TemplateResponse as TemplateResponse
 
 CONVERTERS = {
@@ -51,6 +52,8 @@ class Coder:
 class JsonCoder(Coder):
     @classmethod
     def encode(cls, value: Any) -> str:
+        if isinstance(value, JSONResponse):
+            return value.body
         return json.dumps(value, cls=JsonEncoder)
 
     @classmethod
