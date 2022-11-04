@@ -58,3 +58,13 @@ def test_sync() -> None:
     with TestClient(app) as client:
         response = client.get("/sync-me")
         assert response.json() == 42
+
+
+def test_cache_response_obj() -> None:
+    with TestClient(app) as client:
+        cache_response = client.get("cache_response_obj")
+        assert cache_response.json() == {"a": 1}
+        get_cache_response = client.get("cache_response_obj")
+        assert get_cache_response.json() == {"a": 1}
+        assert get_cache_response.headers.get("cache-control")
+        assert get_cache_response.headers.get("etag")

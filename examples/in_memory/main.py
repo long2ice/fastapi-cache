@@ -2,7 +2,7 @@ import pendulum
 import uvicorn
 from fastapi import FastAPI
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -42,12 +42,19 @@ async def get_date():
 async def get_datetime(request: Request, response: Response):
     return {"now": pendulum.now()}
 
+
 @app.get("/sync-me")
 @cache(namespace="test")
 def sync_me():
     # as per the fastapi docs, this sync function is wrapped in a thread,
     # thereby converted to async. fastapi-cache does the same.
     return 42
+
+
+@app.get("/cache_response_obj")
+@cache(namespace="test", expire=5)
+async def cache_response_obj():
+    return JSONResponse({"a": 1})
 
 
 @app.on_event("startup")
