@@ -78,9 +78,9 @@ def cache(
                 # if the wrapped function does NOT have request or response in its function signature,
                 # make sure we don't pass them in as keyword arguments
                 if not request_param:
-                    kwargs.pop("request")
+                    kwargs.pop("request", None)
                 if not response_param:
-                    kwargs.pop("response")
+                    kwargs.pop("response", None)
 
                 if inspect.iscoroutinefunction(func):
                     # async, return as is.
