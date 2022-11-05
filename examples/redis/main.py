@@ -14,6 +14,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.coder import PickleCoder
 from fastapi_cache.decorator import cache
+from examples.redis.crud import crud_example
 
 app = FastAPI()
 
@@ -71,6 +72,30 @@ async def cache_html(request: Request):
     return templates.TemplateResponse('index.html', {
         'request': request, "ret": await get_ret()
     })
+
+
+@app.get("/cacheable")
+async def cacheable(id: str):
+    result = await crud_example.get(_id=id)
+    return {"result": result}
+
+
+@app.get("/cacheable_for_get_dict")
+async def cacheable_for_get_dict(id: str):
+    result = await crud_example.get_dict(_id=id)
+    return {"result": result}
+
+
+@app.get("/cacheable_with_condition")
+async def cacheable_with_condition(id: str, cache: bool):
+    result = await crud_example.get_with_condition(_id=id, is_cache=cache)
+    return {"result": result}
+
+
+@app.get("/cacheable_with_unless")
+async def cacheable_with_unless(id: str, cache: bool):
+    result = await crud_example.get_with_unless(_id=id, is_cache=cache)
+    return {"result": result}
 
 
 @app.on_event("startup")
