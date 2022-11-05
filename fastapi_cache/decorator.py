@@ -13,7 +13,7 @@ from starlette.responses import Response
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
-from fastapi_cache.utils import async_partial
+from fastapi_cache.utils import async_partial, default_condition
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -215,8 +215,7 @@ def cacheable(
             ret = await async_partial(func)(*args, **kwargs)
             if unless and await async_partial(unless)(*args, **kwargs, ret=ret):
                 return ret
-            if condition is None:
-                condition = lambda *a, **kw: bool(ret)
+            condition = condition or default_condition
             if await async_partial(condition)(*args, **kwargs, ret=ret):
                 await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
             return ret

@@ -18,4 +18,5 @@ def async_partial(call: Callable[P, R]) -> Callable[P, Coroutine[Any, Any, R]]:
     return wrapper
 
 
-
+def default_condition(*args: tuple, ret: Any, **kwargs: dict) -> bool:
+    return bool(ret)
