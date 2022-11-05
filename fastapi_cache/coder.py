@@ -1,8 +1,9 @@
+import codecs
 import datetime
 import json
 import pickle  # nosec:B403
 from decimal import Decimal
-from typing import Any, Dict, Union
+from typing import Any
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
@@ -44,7 +45,7 @@ class Coder:
         raise NotImplementedError
 
     @classmethod
-    def decode(cls, value: Any) -> Any:
+    def decode(cls, value: str) -> Any:
         raise NotImplementedError
 
 
@@ -54,7 +55,7 @@ class JsonCoder(Coder):
         return json.dumps(value, cls=JsonEncoder)
 
     @classmethod
-    def decode(cls, value: Any) -> str:
+    def decode(cls, value: str) -> str:
         return json.loads(value, object_hook=object_hook)
 
 
@@ -63,8 +64,8 @@ class PickleCoder(Coder):
     def encode(cls, value: Any) -> str:
         if isinstance(value, TemplateResponse):
             value = value.body
-        return str(pickle.dumps(value))
+        return codecs.encode(pickle.dumps(value), "base64").decode()
 
     @classmethod
-    def decode(cls, value: Any) -> Any:
-        return pickle.loads(bytes(value))  # nosec:B403,B301
+    def decode(cls, value: str) -> Any:
+        return pickle.loads(codecs.decode(value.encode(), "base64"))  # nosec:B403,B301
