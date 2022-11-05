@@ -13,7 +13,7 @@ from starlette.responses import Response
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
-
+from fastapi_cache.utils import async_partial
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -151,6 +151,74 @@ def cache(
             ret = await ensure_async_func(*args, **kwargs)
 
             await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+            return ret
+
+        return inner
+
+    return wrapper
+
+
+def cacheable(
+    expire: Optional[int] = None,
+    coder: Optional[Coder] = None,
+    key: Optional[str] = None,
+    key_builder: Optional[Callable[..., bool]] = None,
+    namespace: Optional[str] = "",
+    unless: Optional[Callable[..., bool]] = None,
+    condition: Optional[Callable[..., bool]] = None,
+):
+    """Decorator to cache the result of a function.
+
+    e.g.:
+        # cache_key depends on the function keyword arguments, not depend on the function position arguments
+        @cacheable(expire=60, key="my_key:{user_id}")
+        async def get_user(*, user_id: int) -> dict:
+            return {"user_id": user_id, "name": "John Doe"}
+
+
+    :param expire: expire time in seconds
+    :param coder: coder, default is JsonCoder
+    :param key: cache key, if not set, use default key builder
+    :param key_builder: cache key builder, if not set, use default key builder
+    :param namespace: cache namespace
+    :param unless: if unless return True, do not cache
+    :param condition: if condition return True, cache.
+    """
+
+    def wrapper(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
+        @wraps(func)
+        async def inner(*args: P.args, **kwargs: P.kwargs) -> R:
+            nonlocal coder
+            nonlocal expire
+            nonlocal key_builder
+            nonlocal unless
+            nonlocal condition
+
+            coder = coder or FastAPICache.get_coder()
+            expire = expire or FastAPICache.get_expire()
+            key_builder = key_builder or FastAPICache.get_key_builder()
+            backend = FastAPICache.get_backend()
+
+            if key:
+                cache_key = key.format(*args, **kwargs)
+            else:
+                cache_key = await async_partial(key_builder)(
+                    func,
+                    namespace,
+                    args=args,
+                    kwargs=kwargs.copy()
+                )
+
+            ttl, cache_ret = await backend.get_with_ttl(cache_key)
+            if cache_ret is not None:
+                return coder.decode(cache_ret)
+            ret = await async_partial(func)(*args, **kwargs)
+            if unless and await async_partial(unless)(*args, **kwargs, ret=ret):
+                return ret
+            if condition is None:
+                condition = lambda *a, **kw: bool(ret)
+            if await async_partial(condition)(*args, **kwargs, ret=ret):
+                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
             return ret
 
         return inner
