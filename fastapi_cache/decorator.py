@@ -170,11 +170,11 @@ def cacheable(
     """Decorator to cache the result of a function.
 
     e.g.:
-        # cache_key depends on the function keyword arguments, not depend on the function position arguments
-        @cacheable(expire=60, key="my_key:{user_id}")
-        async def get_user(*, user_id: int) -> dict:
-            return {"user_id": user_id, "name": "John Doe"}
-
+        # cache_key depends on the function position arguments and keyword arguments.
+        # {0} is first position argument, {user_id} is keyword argument user_id.
+        @cacheable(expire=60, key="my_key:{0}:{user_id}")
+        async def get_user(pk: int, *, user_id: int) -> dict:
+            return {"pk": pk, "user_id": user_id, "name": "John Doe"}
 
     :param expire: expire time in seconds
     :param coder: coder, default is JsonCoder
