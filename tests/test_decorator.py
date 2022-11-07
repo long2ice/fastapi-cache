@@ -3,11 +3,10 @@ from typing import Generator
 
 import pendulum
 import pytest
-
-from fastapi_cache import FastAPICache
 from starlette.testclient import TestClient
 
 from examples.in_memory.main import app
+from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 
 

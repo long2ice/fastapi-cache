@@ -2,7 +2,7 @@ import datetime
 import json
 import pickle  # nosec:B403
 from decimal import Decimal
-from typing import Any, Dict, Union
+from typing import Any
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
