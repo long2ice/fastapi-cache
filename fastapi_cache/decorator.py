@@ -1,7 +1,8 @@
 import inspect
 import sys
 from functools import wraps
-from typing import Any, Awaitable, Callable, Optional, TypeVar
+from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
+
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
 else:
@@ -21,7 +22,7 @@ R = TypeVar("R")
 
 def cache(
     expire: Optional[int] = None,
-    coder: Optional[Coder] = None,
+    coder: Optional[Type[Coder]] = None,
     key_builder: Optional[Callable[..., Any]] = None,
     namespace: Optional[str] = "",
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
@@ -92,11 +93,9 @@ def cache(
                     # see above why we have to await even although caller also awaits.
                     return await run_in_threadpool(func, *args, **kwargs)
 
-
             copy_kwargs = kwargs.copy()
-            request = copy_kwargs.pop("request", None)
-            response = copy_kwargs.pop("response", None)
-
+            request: Optional[Request] = copy_kwargs.pop("request", None)
+            response: Optional[Response] = copy_kwargs.pop("response", None)
             if (
                 request and request.headers.get("Cache-Control") in ("no-store", "no-cache")
             ) or not FastAPICache.get_enable():
@@ -114,7 +113,7 @@ def cache(
                     request=request,
                     response=response,
                     args=args,
-                    kwargs=copy_kwargs
+                    kwargs=copy_kwargs,
                 )
             else:
                 cache_key = key_builder(
@@ -123,7 +122,7 @@ def cache(
                     request=request,
                     response=response,
                     args=args,
-                    kwargs=copy_kwargs
+                    kwargs=copy_kwargs,
                 )
 
             ttl, ret = await backend.get_with_ttl(cache_key)

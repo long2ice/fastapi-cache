@@ -4,12 +4,13 @@ import pendulum
 import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI
-from redis.asyncio.connection import ConnectionPool
-from starlette.requests import Request
-from starlette.responses import Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from redis.asyncio.connection import ConnectionPool
+from starlette.requests import Request
+from starlette.responses import Response
+
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.coder import PickleCoder
@@ -19,10 +20,11 @@ from examples.crud import crud_example
 app = FastAPI()
 
 app.mount(
-    path='/static',
-    app=StaticFiles(directory='./'), name='static',
+    path="/static",
+    app=StaticFiles(directory="./"),
+    name="static",
 )
-templates = Jinja2Templates(directory='./')
+templates = Jinja2Templates(directory="./")
 ret = 0
 
 
@@ -66,12 +68,12 @@ async def get_datetime(request: Request, response: Response):
     return pendulum.now()
 
 
-@app.get('/html', response_class=HTMLResponse)
+@app.get("/html", response_class=HTMLResponse)
 @cache(expire=60, namespace="html", coder=PickleCoder)
 async def cache_html(request: Request):
-    return templates.TemplateResponse('index.html', {
-        'request': request, "ret": await get_ret()
-    })
+    return templates.TemplateResponse("index.html", {"request": request, "ret": await get_ret()})
+
+
 @app.get("/cacheable")
 async def cacheable(id: str):
     result = await crud_example.get(_id=id)

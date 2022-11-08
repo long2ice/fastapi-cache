@@ -1,13 +1,23 @@
 import time
+from typing import Generator
 
 import pendulum
-from fastapi_cache import FastAPICache
+import pytest
 from starlette.testclient import TestClient
 
 from examples.in_memory.main import app
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
 
 
-def test_datetime():
+@pytest.fixture(autouse=True)
+def init_cache() -> Generator:
+    FastAPICache.init(InMemoryBackend())
+    yield
+    FastAPICache.reset()
+
+
+def test_datetime() -> None:
     with TestClient(app) as client:
         response = client.get("/datetime")
         now = response.json().get("now")
@@ -23,7 +33,8 @@ def test_datetime():
         assert now != now_
         assert now == pendulum.now().replace(microsecond=0)
 
-def test_date():
+
+def test_date() -> None:
     """Test path function without request or response arguments."""
     with TestClient(app) as client:
 
@@ -40,7 +51,8 @@ def test_date():
         assert pendulum.parse(response.json()) == pendulum.today()
         FastAPICache._enable = True
 
-def test_sync():
+
+def test_sync() -> None:
     """Ensure that sync function support works."""
     with TestClient(app) as client:
         response = client.get("/sync-me")
