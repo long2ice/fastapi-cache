@@ -166,7 +166,7 @@ def cacheable(
     namespace: Optional[str] = "",
     unless: Optional[Callable[..., bool]] = None,
     condition: Optional[Callable[..., bool]] = None,
-):
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """Decorator to cache the result of a function.
 
     e.g.:
