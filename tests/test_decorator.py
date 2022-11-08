@@ -1,5 +1,4 @@
 import time
-import uuid
 
 import pendulum
 from fastapi_cache import FastAPICache
@@ -46,65 +45,3 @@ def test_sync():
     with TestClient(app) as client:
         response = client.get("/sync-me")
         assert response.json() == 42
-
-
-def test_cacheable():
-    from examples.redis.main import app
-
-    with TestClient(app) as client:
-        _id = str(uuid.uuid4())
-        response = client.get("/cacheable", params={"id": _id})
-        last_result = response.json()["result"]
-        response = client.get("/cacheable", params={"id": _id})
-        current_result = response.json()["result"]
-        assert last_result == current_result, f"last_result: {last_result}, current_result: {current_result}"
-
-
-def test_cacheable_with_condition():
-    from examples.redis.main import app
-
-    with TestClient(app) as client:
-        _id = str(uuid.uuid4())
-        response = client.get("/cacheable_with_condition", params={"id": _id, "cache": False})
-        last_result = response.json()["result"]
-        response = client.get("/cacheable_with_condition", params={"id": _id, "cache": False})
-        current_result = response.json()["result"]
-        assert last_result != current_result, f"last_result: {last_result}, current_result: {current_result}"
-
-        _id = str(uuid.uuid4())
-        response = client.get("/cacheable_with_condition", params={"id": _id, "cache": True})
-        last_result = response.json()["result"]
-        response = client.get("/cacheable_with_condition", params={"id": _id, "cache": True})
-        current_result = response.json()["result"]
-        assert last_result == current_result, f"last_result: {last_result}, current_result: {current_result}"
-
-
-def test_cacheable_with_unless():
-    from examples.redis.main import app
-
-    with TestClient(app) as client:
-        _id = str(uuid.uuid4())
-        response = client.get("/cacheable_with_unless", params={"id": _id, "cache": False})
-        last_result = response.json()["result"]
-        response = client.get("/cacheable_with_unless", params={"id": _id, "cache": False})
-        current_result = response.json()["result"]
-        assert last_result.startswith("no") and last_result != current_result, f"last_result: {last_result}, current_result: {current_result}"
-
-        _id = str(uuid.uuid4())
-        response = client.get("/cacheable_with_unless", params={"id": _id, "cache": True})
-        last_result = response.json()["result"]
-        response = client.get("/cacheable_with_unless", params={"id": _id, "cache": True})
-        current_result = response.json()["result"]
-        assert last_result == current_result, f"last_result: {last_result}, current_result: {current_result}"
-
-
-def test_cacheable_for_get_dict():
-    from examples.redis.main import app
-
-    with TestClient(app) as client:
-        _id = str(uuid.uuid4())
-        response = client.get("/cacheable_for_get_dict", params={"id": _id})
-        last_result = response.json()["result"]
-        response = client.get("/cacheable_for_get_dict", params={"id": _id})
-        current_result = response.json()["result"]
-        assert last_result == current_result, f"last_result: {last_result}, current_result: {current_result}"
