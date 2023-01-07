@@ -1,5 +1,5 @@
 import hashlib
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 from starlette.requests import Request
 from starlette.responses import Response

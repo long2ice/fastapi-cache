@@ -1,7 +1,7 @@
 import inspect
 import sys
 from functools import wraps
-from typing import Any, Awaitable, Callable, Optional, TypeVar, Type
+from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
@@ -14,7 +14,6 @@ from starlette.responses import Response
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
-
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -113,7 +112,7 @@ def cache(
                     request=request,
                     response=response,
                     args=args,
-                    kwargs=copy_kwargs
+                    kwargs=copy_kwargs,
                 )
             else:
                 cache_key = key_builder(
@@ -122,7 +121,7 @@ def cache(
                     request=request,
                     response=response,
                     args=args,
-                    kwargs=copy_kwargs
+                    kwargs=copy_kwargs,
                 )
 
             ttl, ret = await backend.get_with_ttl(cache_key)
