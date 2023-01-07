@@ -4,7 +4,7 @@ import pendulum
 import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI
-from starlette.responses import Response, JSONResponse
+from starlette.responses import JSONResponse
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
