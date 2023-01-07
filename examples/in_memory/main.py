@@ -42,6 +42,7 @@ async def get_date():
 async def get_datetime(request: Request, response: Response):
     return {"now": pendulum.now()}
 
+
 @app.get("/sync-me")
 @cache(namespace="test")
 def sync_me():
