@@ -123,13 +123,18 @@ def cache(
                     args=args,
                     kwargs=copy_kwargs,
                 )
-
-            ttl, ret = await backend.get_with_ttl(cache_key)
+            try:
+                ttl, ret = await backend.get_with_ttl(cache_key)
+            except ConnectionError:
+                ttl, ret = 0, None
             if not request:
                 if ret is not None:
                     return coder.decode(ret)
                 ret = await ensure_async_func(*args, **kwargs)
-                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                try:
+                    await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                except ConnectionError:
+                    pass
                 return ret
 
             if request.method != "GET":
@@ -148,7 +153,10 @@ def cache(
 
             ret = await ensure_async_func(*args, **kwargs)
 
-            await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+            try:
+                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+            except ConnectionError:
+                pass
             return ret
 
         return inner

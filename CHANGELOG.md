@@ -5,6 +5,7 @@
 ### 0.2.1
 
 - Support cache jinja2 template response.
+- Transparently handle backend connection failures.
 
 ### 0.2.0
 
