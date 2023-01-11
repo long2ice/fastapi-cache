@@ -9,6 +9,7 @@
 - Add `py.typed` file and type hints
 - Add TestCase
 - Fix cache decorate sync function
+- Transparently handle backend connection failures.
 
 ### 0.2.0
 
