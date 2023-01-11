@@ -132,7 +132,9 @@ def cache(
                     return coder.decode(ret)
                 ret = await ensure_async_func(*args, **kwargs)
                 try:
-                    await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                    await backend.set(
+                        cache_key, coder.encode(ret), expire or FastAPICache.get_expire()
+                    )
                 except ConnectionError:
                     pass
                 return ret

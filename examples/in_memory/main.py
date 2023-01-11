@@ -2,7 +2,7 @@ import pendulum
 import uvicorn
 from fastapi import FastAPI
 from starlette.requests import Request
-from starlette.responses import Response, JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
