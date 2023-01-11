@@ -4,6 +4,7 @@ import pendulum
 import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI
+from starlette.responses import JSONResponse
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -71,6 +72,12 @@ async def get_datetime(request: Request, response: Response):
 @cache(expire=60, namespace="html", coder=PickleCoder)
 async def cache_html(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "ret": await get_ret()})
+
+
+@app.get("/cache_response_obj")
+@cache(namespace="test", expire=5)
+async def cache_response_obj():
+    return JSONResponse({"a": 1})
 
 
 @app.on_event("startup")
