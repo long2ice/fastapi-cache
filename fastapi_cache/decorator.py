@@ -77,9 +77,9 @@ def cache(
                 # if the wrapped function does NOT have request or response in its function signature,
                 # make sure we don't pass them in as keyword arguments
                 if not request_param:
-                    kwargs.pop("request")
+                    kwargs.pop("request", None)
                 if not response_param:
-                    kwargs.pop("response")
+                    kwargs.pop("response", None)
 
                 if inspect.iscoroutinefunction(func):
                     # async, return as is.
@@ -123,13 +123,20 @@ def cache(
                     args=args,
                     kwargs=copy_kwargs,
                 )
-
-            ttl, ret = await backend.get_with_ttl(cache_key)
+            try:
+                ttl, ret = await backend.get_with_ttl(cache_key)
+            except ConnectionError:
+                ttl, ret = 0, None
             if not request:
                 if ret is not None:
                     return coder.decode(ret)
                 ret = await ensure_async_func(*args, **kwargs)
-                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                try:
+                    await backend.set(
+                        cache_key, coder.encode(ret), expire or FastAPICache.get_expire()
+                    )
+                except ConnectionError:
+                    pass
                 return ret
 
             if request.method != "GET":
@@ -148,7 +155,10 @@ def cache(
 
             ret = await ensure_async_func(*args, **kwargs)
 
-            await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+            try:
+                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+            except ConnectionError:
+                pass
             return ret
 
         return inner
