@@ -125,7 +125,7 @@ def cache(
                 )
             try:
                 ttl, ret = await backend.get_with_ttl(cache_key)
-            except ConnectionError:
+            except Exception:
                 ttl, ret = 0, None
             if not request:
                 if ret is not None:
@@ -133,7 +133,7 @@ def cache(
                 ret = await ensure_async_func(*args, **kwargs)
                 try:
                     await backend.set(cache_key, coder.encode(ret), expire)
-                except ConnectionError:
+                except Exception:
                     pass
                 return ret
 
@@ -156,7 +156,7 @@ def cache(
 
             try:
                 await backend.set(cache_key, encoded_ret, expire)
-            except ConnectionError:
+            except Exception:
                 pass
 
             response.headers["Cache-Control"] = f"max-age={expire}"

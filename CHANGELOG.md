@@ -2,6 +2,11 @@
 
 ## 0.2
 
+### 0.2.1
+- Fix picklecoder
+- Fix connection failure transparency
+- Add Cache-Control and ETag on first response
+
 ### 0.2.0
 
 - Make `request` and `response` optional.
