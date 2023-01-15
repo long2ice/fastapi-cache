@@ -132,9 +132,7 @@ def cache(
                     return coder.decode(ret)
                 ret = await ensure_async_func(*args, **kwargs)
                 try:
-                    await backend.set(
-                        cache_key, coder.encode(ret), expire or FastAPICache.get_expire()
-                    )
+                    await backend.set(cache_key, coder.encode(ret), expire)
                 except ConnectionError:
                     pass
                 return ret
@@ -154,11 +152,16 @@ def cache(
                 return coder.decode(ret)
 
             ret = await ensure_async_func(*args, **kwargs)
+            encoded_ret = coder.encode(ret)
 
             try:
-                await backend.set(cache_key, coder.encode(ret), expire or FastAPICache.get_expire())
+                await backend.set(cache_key, encoded_ret, expire)
             except ConnectionError:
                 pass
+
+            response.headers["Cache-Control"] = f"max-age={expire}"
+            etag = f"W/{hash(encoded_ret)}"
+            response.headers["ETag"] = etag
             return ret
 
         return inner
