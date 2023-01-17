@@ -2,6 +2,7 @@ import inspect
 import sys
 from functools import wraps
 from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
+import logging
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
@@ -15,6 +16,8 @@ from starlette.responses import Response
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 P = ParamSpec("P")
 R = TypeVar("R")
 
@@ -126,6 +129,7 @@ def cache(
             try:
                 ttl, ret = await backend.get_with_ttl(cache_key)
             except Exception:
+                logger.warning(f"Error retrieving cache key '{cache_key}' from backend:", exc_info=True)
                 ttl, ret = 0, None
             if not request:
                 if ret is not None:
@@ -134,7 +138,7 @@ def cache(
                 try:
                     await backend.set(cache_key, coder.encode(ret), expire)
                 except Exception:
-                    pass
+                    logger.warning(f"Error setting cache key '{cache_key}' in backend:", exc_info=True)
                 return ret
 
             if request.method != "GET":
@@ -157,7 +161,7 @@ def cache(
             try:
                 await backend.set(cache_key, encoded_ret, expire)
             except Exception:
-                pass
+                logger.warning(f"Error setting cache key '{cache_key}' in backend:", exc_info=True)
 
             response.headers["Cache-Control"] = f"max-age={expire}"
             etag = f"W/{hash(encoded_ret)}"
