@@ -1,8 +1,8 @@
 import inspect
+import logging
 import sys
 from functools import wraps
 from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
-import logging
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
