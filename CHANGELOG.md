@@ -2,6 +2,12 @@
 
 ## 0.2
 
+### 0.2.1
+- Fix picklecoder
+- Fix connection failure transparency and add logging
+- Add Cache-Control and ETag on first response
+- Support Async RedisCluster client from redis-py
+
 ### 0.2.0
 
 - Make `request` and `response` optional.
