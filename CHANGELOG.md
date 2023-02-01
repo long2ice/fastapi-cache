@@ -2,14 +2,16 @@
 
 ## 0.2
 
-### 0.2.1
-
-- Support cache jinja2 template response.
-
 ### 0.2.0
 
 - Make `request` and `response` optional.
 - Add typing info to the `cache` decorator.
+- Support cache jinja2 template response.
+- Support cache `JSONResponse`
+- Add `py.typed` file and type hints
+- Add TestCase
+- Fix cache decorate sync function
+- Transparently handle backend connection failures.
 
 ## 0.1
 
