@@ -48,7 +48,13 @@ def cache(
             (param for param in signature.parameters.values() if param.annotation is Response),
             None,
         )
-        parameters = [*signature.parameters.values()]
+        parameters = []
+        extra_params = []
+        for p in signature.parameters.values():
+            if p.kind <= inspect.Parameter.KEYWORD_ONLY:
+                parameters.append(p)
+            else:
+                extra_params.append(p)
         if not request_param:
             parameters.append(
                 inspect.Parameter(
@@ -65,6 +71,7 @@ def cache(
                     kind=inspect.Parameter.KEYWORD_ONLY,
                 ),
             )
+        parameters.extend(extra_params)
         if parameters:
             signature = signature.replace(parameters=parameters)
         func.__signature__ = signature
