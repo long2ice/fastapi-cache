@@ -7,13 +7,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: abatilo/actions-poetry@v2.1.3
-      - name: Config poetry
-        run: poetry config experimental.new-installer false
+      - name: Install and configure Poetry
+        run: |
+          pip install -U pip poetry
+          poetry config virtualenvs.create false
       - name: Build dists
         run: make build
       - name: Pypi Publish
