@@ -42,6 +42,13 @@ async def get_date():
 async def get_datetime(request: Request, response: Response):
     return {"now": pendulum.now()}
 
+@cache(namespace="test")
+async def func_kwargs(*unused_args, **kwargs):
+    return kwargs
+
+@app.get("/kwargs")
+async def get_kwargs(name: str):
+    return await func_kwargs(name, name=name)
 
 @app.get("/sync-me")
 @cache(namespace="test")

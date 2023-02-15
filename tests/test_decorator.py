@@ -67,3 +67,9 @@ def test_cache_response_obj() -> None:
         assert get_cache_response.json() == {"a": 1}
         assert get_cache_response.headers.get("cache-control")
         assert get_cache_response.headers.get("etag")
+
+def test_kwargs() -> None:
+    with TestClient(app) as client:
+        name = "Jon"
+        response = client.get("/kwargs", params = {"name": name})
+        assert response.json() == {"name": name}
