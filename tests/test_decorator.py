@@ -37,7 +37,6 @@ def test_datetime() -> None:
 def test_date() -> None:
     """Test path function without request or response arguments."""
     with TestClient(app) as client:
-
         response = client.get("/date")
         assert pendulum.parse(response.json()) == pendulum.today()
 
@@ -68,8 +67,9 @@ def test_cache_response_obj() -> None:
         assert get_cache_response.headers.get("cache-control")
         assert get_cache_response.headers.get("etag")
 
+
 def test_kwargs() -> None:
     with TestClient(app) as client:
         name = "Jon"
-        response = client.get("/kwargs", params = {"name": name})
+        response = client.get("/kwargs", params={"name": name})
         assert response.json() == {"name": name}

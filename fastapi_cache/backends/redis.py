@@ -13,7 +13,7 @@ class RedisBackend(Backend):
 
     async def get_with_ttl(self, key: str) -> Tuple[int, str]:
         async with self.redis.pipeline(transaction=not self.is_cluster) as pipe:
-            return await (pipe.ttl(key).get(key).execute())
+            return await pipe.ttl(key).get(key).execute()
 
     async def get(self, key: str) -> Optional[str]:
         return await self.redis.get(key)

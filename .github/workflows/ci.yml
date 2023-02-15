@@ -8,7 +8,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.x"
-      - uses: abatilo/actions-poetry@v2.1.6
+      - uses: abatilo/actions-poetry@v2
       - name: Config poetry
         run: poetry config experimental.new-installer false
       - name: CI
