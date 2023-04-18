@@ -3,7 +3,7 @@ import datetime
 import json
 import pickle  # nosec:B403
 from decimal import Decimal
-from typing import Any
+from typing import Any, Union
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
@@ -72,7 +72,7 @@ class PickleCoder(Coder):
         return codecs.encode(pickle.dumps(value), "base64").decode()
 
     @classmethod
-    def decode(cls, value: str | bytes) -> Any:
+    def decode(cls, value: Union[str, bytes]) -> Any:
         if isinstance(value, str):
             value = value.encode()
         return pickle.loads(codecs.decode(value, "base64"))  # nosec:B403,B301
