@@ -55,6 +55,8 @@ class JsonCoder(Coder):
     def encode(cls, value: Any) -> str:
         if isinstance(value, JSONResponse):
             return value.body
+        if cls.decode(json.dumps(value, cls=JsonEncoder)) != value:
+            raise ValueError("The value sent is not Json")
         return json.dumps(value, cls=JsonEncoder)
 
     @classmethod
@@ -70,5 +72,7 @@ class PickleCoder(Coder):
         return codecs.encode(pickle.dumps(value), "base64").decode()
 
     @classmethod
-    def decode(cls, value: str) -> Any:
-        return pickle.loads(codecs.decode(value.encode(), "base64"))  # nosec:B403,B301
+    def decode(cls, value: str | bytes) -> Any:
+        if isinstance(value, str):
+            value = value.encode()
+        return pickle.loads(codecs.decode(value, "base64"))  # nosec:B403,B301
