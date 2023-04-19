@@ -1,4 +1,5 @@
 import inspect
+import logging
 import sys
 from functools import wraps
 from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
@@ -15,6 +16,8 @@ from starlette.responses import Response
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 P = ParamSpec("P")
 R = TypeVar("R")
 
@@ -45,7 +48,13 @@ def cache(
             (param for param in signature.parameters.values() if param.annotation is Response),
             None,
         )
-        parameters = [*signature.parameters.values()]
+        parameters = []
+        extra_params = []
+        for p in signature.parameters.values():
+            if p.kind <= inspect.Parameter.KEYWORD_ONLY:
+                parameters.append(p)
+            else:
+                extra_params.append(p)
         if not request_param:
             parameters.append(
                 inspect.Parameter(
@@ -62,6 +71,7 @@ def cache(
                     kind=inspect.Parameter.KEYWORD_ONLY,
                 ),
             )
+        parameters.extend(extra_params)
         if parameters:
             signature = signature.replace(parameters=parameters)
         func.__signature__ = signature
@@ -125,7 +135,10 @@ def cache(
                 )
             try:
                 ttl, ret = await backend.get_with_ttl(cache_key)
-            except ConnectionError:
+            except Exception:
+                logger.warning(
+                    f"Error retrieving cache key '{cache_key}' from backend:", exc_info=True
+                )
                 ttl, ret = 0, None
             if not request:
                 if ret is not None:
@@ -133,8 +146,10 @@ def cache(
                 ret = await ensure_async_func(*args, **kwargs)
                 try:
                     await backend.set(cache_key, coder.encode(ret), expire)
-                except ConnectionError:
-                    pass
+                except Exception:
+                    logger.warning(
+                        f"Error setting cache key '{cache_key}' in backend:", exc_info=True
+                    )
                 return ret
 
             if request.method != "GET":
@@ -156,8 +171,8 @@ def cache(
 
             try:
                 await backend.set(cache_key, encoded_ret, expire)
-            except ConnectionError:
-                pass
+            except Exception:
+                logger.warning(f"Error setting cache key '{cache_key}' in backend:", exc_info=True)
 
             response.headers["Cache-Control"] = f"max-age={expire}"
             etag = f"W/{hash(encoded_ret)}"

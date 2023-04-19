@@ -8,15 +8,15 @@ deps:
 	@poetry install --no-root -E all
 
 style: deps
-	@poetry run isort -src $(checkfiles)
-	@poetry run black $(checkfiles)
+	@isort -src $(checkfiles)
+	@black $(checkfiles)
 
 check: deps
-	@poetry run black $(checkfiles) || (echo "Please run 'make style' to auto-fix style issues" && false)
-	@poetry run flake8 $(checkfiles)
+	@black $(checkfiles) || (echo "Please run 'make style' to auto-fix style issues" && false)
+	@flake8 $(checkfiles)
 
 test: deps
-	$(py_warn) poetry run pytest
+	$(py_warn) pytest
 
 build: clean deps
 	@poetry build
