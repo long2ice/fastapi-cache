@@ -1,8 +1,9 @@
-from typing import Callable, ClassVar, Optional, Type
+from typing import ClassVar, Optional, Type
 
 from fastapi_cache.backends import Backend
 from fastapi_cache.coder import Coder, JsonCoder
 from fastapi_cache.key_builder import default_key_builder
+from fastapi_cache.types import KeyBuilder
 
 
 class FastAPICache:
@@ -11,7 +12,7 @@ class FastAPICache:
     _expire: ClassVar[Optional[int]] = None
     _init: ClassVar[bool] = False
     _coder: ClassVar[Optional[Type[Coder]]] = None
-    _key_builder: ClassVar[Optional[Callable]] = None
+    _key_builder: ClassVar[Optional[KeyBuilder]] = None
     _enable: ClassVar[bool] = True
 
     @classmethod
@@ -21,7 +22,7 @@ class FastAPICache:
         prefix: str = "",
         expire: Optional[int] = None,
         coder: Type[Coder] = JsonCoder,
-        key_builder: Callable = default_key_builder,
+        key_builder: KeyBuilder = default_key_builder,
         enable: bool = True,
     ) -> None:
         if cls._init:
@@ -64,7 +65,7 @@ class FastAPICache:
         return cls._coder
 
     @classmethod
-    def get_key_builder(cls) -> Callable:
+    def get_key_builder(cls) -> KeyBuilder:
         assert cls._key_builder, "You must call init first!"  # nosec: B101
         return cls._key_builder
 

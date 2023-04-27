@@ -2,7 +2,7 @@ import inspect
 import logging
 import sys
 from functools import wraps
-from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
+from typing import Awaitable, Callable, Optional, Type, TypeVar
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
@@ -15,6 +15,7 @@ from starlette.responses import Response
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
+from fastapi_cache.types import KeyBuilder
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -25,7 +26,7 @@ R = TypeVar("R")
 def cache(
     expire: Optional[int] = None,
     coder: Optional[Type[Coder]] = None,
-    key_builder: Optional[Callable[..., Any]] = None,
+    key_builder: Optional[KeyBuilder] = None,
     namespace: Optional[str] = "",
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
