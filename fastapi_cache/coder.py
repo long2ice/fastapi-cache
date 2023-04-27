@@ -54,7 +54,7 @@ class JsonCoder(Coder):
     @classmethod
     def encode(cls, value: Any) -> str:
         if isinstance(value, JSONResponse):
-            return value.body
+            return value.body.decode()
         return json.dumps(value, cls=JsonEncoder)
 
     @classmethod
