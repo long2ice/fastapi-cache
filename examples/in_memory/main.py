@@ -67,6 +67,19 @@ async def cache_response_obj():
     return JSONResponse({"a": 1})
 
 
+class SomeClass:
+    def __init__(self, value):
+        self.value = value
+
+    async def handler_method(self):
+        return self.value
+
+
+# register an instance method as a handler
+instance = SomeClass(17)
+app.get("/method")(cache(namespace="test")(instance.handler_method))
+
+
 @app.on_event("startup")
 async def startup():
     FastAPICache.init(InMemoryBackend())

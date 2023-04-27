@@ -22,6 +22,36 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
+def _augment_signature(
+    signature: inspect.Signature, add_request: bool, add_response: bool
+) -> inspect.Signature:
+    if not (add_request or add_response):
+        return signature
+
+    parameters = list(signature.parameters.values())
+    variadic_keyword_params = []
+    while parameters and parameters[-1].kind is inspect.Parameter.VAR_KEYWORD:
+        variadic_keyword_params.append(parameters.pop())
+
+    if add_request:
+        parameters.append(
+            inspect.Parameter(
+                name="request",
+                annotation=Request,
+                kind=inspect.Parameter.KEYWORD_ONLY,
+            ),
+        )
+    if add_response:
+        parameters.append(
+            inspect.Parameter(
+                name="response",
+                annotation=Response,
+                kind=inspect.Parameter.KEYWORD_ONLY,
+            ),
+        )
+    return signature.replace(parameters=[*parameters, *variadic_keyword_params])
+
+
 def cache(
     expire: Optional[int] = None,
     coder: Optional[Type[Coder]] = None,
@@ -48,33 +78,6 @@ def cache(
             (param for param in signature.parameters.values() if param.annotation is Response),
             None,
         )
-        parameters = []
-        extra_params = []
-        for p in signature.parameters.values():
-            if p.kind <= inspect.Parameter.KEYWORD_ONLY:
-                parameters.append(p)
-            else:
-                extra_params.append(p)
-        if not request_param:
-            parameters.append(
-                inspect.Parameter(
-                    name="request",
-                    annotation=Request,
-                    kind=inspect.Parameter.KEYWORD_ONLY,
-                ),
-            )
-        if not response_param:
-            parameters.append(
-                inspect.Parameter(
-                    name="response",
-                    annotation=Response,
-                    kind=inspect.Parameter.KEYWORD_ONLY,
-                ),
-            )
-        parameters.extend(extra_params)
-        if parameters:
-            signature = signature.replace(parameters=parameters)
-        func.__signature__ = signature
 
         @wraps(func)
         async def inner(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -179,6 +182,9 @@ def cache(
             response.headers["ETag"] = etag
             return ret
 
+        inner.__signature__ = _augment_signature(
+            signature, request_param is None, response_param is None
+        )
         return inner
 
     return wrapper

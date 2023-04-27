@@ -73,3 +73,9 @@ def test_kwargs() -> None:
         name = "Jon"
         response = client.get("/kwargs", params={"name": name})
         assert response.json() == {"name": name}
+
+
+def test_method() -> None:
+    with TestClient(app) as client:
+        response = client.get("/method")
+        assert response.json() == 17
