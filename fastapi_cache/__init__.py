@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Type
+from typing import Callable, ClassVar, Optional, Type
 
 from fastapi_cache.backends import Backend
 from fastapi_cache.coder import Coder, JsonCoder
@@ -6,13 +6,13 @@ from fastapi_cache.key_builder import default_key_builder
 
 
 class FastAPICache:
-    _backend: Optional[Backend] = None
-    _prefix: Optional[str] = None
-    _expire: Optional[int] = None
-    _init = False
-    _coder: Optional[Type[Coder]] = None
-    _key_builder: Optional[Callable] = None
-    _enable = True
+    _backend: ClassVar[Optional[Backend]] = None
+    _prefix: ClassVar[Optional[str]] = None
+    _expire: ClassVar[Optional[int]] = None
+    _init: ClassVar[bool] = False
+    _coder: ClassVar[Optional[Type[Coder]]] = None
+    _key_builder: ClassVar[Optional[Callable]] = None
+    _enable: ClassVar[bool] = True
 
     @classmethod
     def init(
