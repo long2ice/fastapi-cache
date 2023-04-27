@@ -1,15 +1,15 @@
 from typing import Optional, Tuple
 
-from redis.asyncio.client import AbstractRedis
-from redis.asyncio.cluster import AbstractRedisCluster
+from redis.asyncio.client import Redis
+from redis.asyncio.cluster import RedisCluster
 
 from fastapi_cache.backends import Backend
 
 
 class RedisBackend(Backend):
-    def __init__(self, redis: AbstractRedis):
+    def __init__(self, redis: Redis[str] | RedisCluster[str]):
         self.redis = redis
-        self.is_cluster = isinstance(redis, AbstractRedisCluster)
+        self.is_cluster: bool = isinstance(redis, RedisCluster)
 
     async def get_with_ttl(self, key: str) -> Tuple[int, str]:
         async with self.redis.pipeline(transaction=not self.is_cluster) as pipe:
