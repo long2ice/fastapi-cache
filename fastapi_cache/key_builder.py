@@ -1,17 +1,17 @@
 import hashlib
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from starlette.requests import Request
 from starlette.responses import Response
 
 
 def default_key_builder(
-    func: Callable,
+    func: Callable[..., Any],
     namespace: str = "",
     request: Optional[Request] = None,
     response: Optional[Response] = None,
-    args: Optional[tuple] = None,
-    kwargs: Optional[dict] = None,
+    args: Optional[tuple[Any, ...]] = None,
+    kwargs: Optional[dict[str, Any]] = None,
 ) -> str:
     from fastapi_cache import FastAPICache
 
