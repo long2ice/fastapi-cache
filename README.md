@@ -98,8 +98,21 @@ expire | int, states a caching time in seconds
 namespace | str, namespace to use to store certain cache items
 coder | which coder to use, e.g. JsonCoder
 key_builder | which key builder to use, default to builtin
+injected_dependency_namespace | prefix for injected dependency keywords, defaults to `__fastapi_cache`.
 
 You can also use `cache` as decorator like other cache tools to cache common function result.
+
+### Injected Request and Response dependencies
+
+The `cache` decorator adds dependencies for the `Request` and `Response` objects, so that it can
+add cache control headers to the outgoing response, and return a 304 Not Modified response when
+the incoming request has a matching If-Non-Match header. This only happens if the decorated
+endpoint doesn't already list these objects directly.
+
+The keyword arguments for these extra dependencies are named
+`__fastapi_cache_request` and `__fastapi_cache_response` to minimize collisions.
+Use the `injected_dependency_namespace` argument to `@cache()` to change the
+prefix used if those names would clash anyway.
 
 
 ### Supported data types

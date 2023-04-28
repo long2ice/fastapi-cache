@@ -94,3 +94,9 @@ def test_non_get() -> None:
         assert response.json() == {"value": 1}
         response = client.put("/uncached_put")
         assert response.json() == {"value": 2}
+
+
+def test_alternate_injected_namespace() -> None:
+    with TestClient(app) as client:
+        response = client.get("/namespaced_injection")
+        assert response.json() == {"__fastapi_cache_request": 42, "__fastapi_cache_response": 17}
