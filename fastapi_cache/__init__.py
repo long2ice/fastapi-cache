@@ -6,6 +6,16 @@ from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import KeyBuilder
 
 
+__all__ = [
+    "Backend",
+    "Coder",
+    "FastAPICache",
+    "JsonCoder",
+    "KeyBuilder",
+    "default_key_builder",
+]
+
+
 class FastAPICache:
     _backend: ClassVar[Optional[Backend]] = None
     _prefix: ClassVar[Optional[str]] = None
