@@ -3,14 +3,14 @@ import datetime
 import json
 import pickle  # nosec:B403
 from decimal import Decimal
-from typing import Any
+from typing import Any, Callable
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
 from starlette.responses import JSONResponse
 from starlette.templating import _TemplateResponse as TemplateResponse
 
-CONVERTERS = {
+CONVERTERS: dict[str, Callable[[str], Any]] = {
     "date": lambda x: pendulum.parse(x, exact=True),
     "datetime": lambda x: pendulum.parse(x, exact=True),
     "decimal": Decimal,
@@ -35,7 +35,7 @@ def object_hook(obj: Any) -> Any:
         return obj
 
     if _spec_type in CONVERTERS:
-        return CONVERTERS[_spec_type](obj["val"])  # type: ignore
+        return CONVERTERS[_spec_type](obj["val"])
     else:
         raise TypeError("Unknown {}".format(_spec_type))
 
@@ -54,7 +54,7 @@ class JsonCoder(Coder):
     @classmethod
     def encode(cls, value: Any) -> str:
         if isinstance(value, JSONResponse):
-            return value.body
+            return value.body.decode()
         return json.dumps(value, cls=JsonEncoder)
 
     @classmethod

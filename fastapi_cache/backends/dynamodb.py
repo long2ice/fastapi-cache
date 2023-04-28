@@ -2,7 +2,7 @@ import datetime
 from typing import Optional, Tuple
 
 from aiobotocore.client import AioBaseClient
-from aiobotocore.session import get_session
+from aiobotocore.session import get_session, AioSession
 
 from fastapi_cache.backends import Backend
 
@@ -26,7 +26,7 @@ class DynamoBackend(Backend):
     """
 
     def __init__(self, table_name: str, region: Optional[str] = None) -> None:
-        self.session = get_session()
+        self.session: AioSession = get_session()
         self.client: Optional[AioBaseClient] = None  # Needs async init
         self.table_name = table_name
         self.region = region

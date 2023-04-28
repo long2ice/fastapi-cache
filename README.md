@@ -121,7 +121,7 @@ take effect globally.
 ```python
 def my_key_builder(
         func,
-        namespace: Optional[str] = "",
+        namespace: str = "",
         request: Request = None,
         response: Response = None,
         *args,

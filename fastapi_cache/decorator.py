@@ -2,7 +2,7 @@ import inspect
 import logging
 import sys
 from functools import wraps
-from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
+from typing import Awaitable, Callable, Optional, Type, TypeVar
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
@@ -15,8 +15,9 @@ from starlette.responses import Response
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
+from fastapi_cache.types import KeyBuilder
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -25,7 +26,7 @@ R = TypeVar("R")
 def cache(
     expire: Optional[int] = None,
     coder: Optional[Type[Coder]] = None,
-    key_builder: Optional[Callable[..., Any]] = None,
+    key_builder: Optional[KeyBuilder] = None,
     namespace: Optional[str] = "",
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
@@ -115,24 +116,17 @@ def cache(
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
 
-            if inspect.iscoroutinefunction(key_builder):
-                cache_key = await key_builder(
-                    func,
-                    namespace,
-                    request=request,
-                    response=response,
-                    args=args,
-                    kwargs=copy_kwargs,
-                )
-            else:
-                cache_key = key_builder(
-                    func,
-                    namespace,
-                    request=request,
-                    response=response,
-                    args=args,
-                    kwargs=copy_kwargs,
-                )
+            cache_key = key_builder(
+                func,
+                namespace,
+                request=request,
+                response=response,
+                args=args,
+                kwargs=copy_kwargs,
+            )
+            if inspect.isawaitable(cache_key):
+                cache_key = await cache_key
+
             try:
                 ttl, ret = await backend.get_with_ttl(cache_key)
             except Exception:
