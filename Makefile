@@ -14,6 +14,7 @@ style: deps
 check: deps
 	@black $(checkfiles) || (echo "Please run 'make style' to auto-fix style issues" && false)
 	@flake8 $(checkfiles)
+	@mypy ${checkfiles}
 
 test: deps
 	$(py_warn) pytest
