@@ -15,7 +15,7 @@ class KeyBuilder(Protocol):
         *,
         request: Optional[Request] = ...,
         response: Optional[Response] = ...,
-        args: Optional[tuple[Any, ...]] = ...,
-        kwargs: Optional[dict[str, Any]] = ...,
+        args: tuple[Any, ...] = ...,
+        kwargs: dict[str, Any] = ...,
     ) -> Union[Awaitable[str], str]:
         ...
