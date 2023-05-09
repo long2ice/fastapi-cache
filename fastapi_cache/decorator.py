@@ -29,7 +29,7 @@ def _augment_signature(signature: Signature, *extra: Parameter) -> Signature:
         return signature
 
     parameters = list(signature.parameters.values())
-    variadic_keyword_params = []
+    variadic_keyword_params: List[Parameter] = []
     while parameters and parameters[-1].kind is Parameter.VAR_KEYWORD:
         variadic_keyword_params.append(parameters.pop())
 

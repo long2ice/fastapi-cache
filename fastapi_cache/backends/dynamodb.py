@@ -41,7 +41,7 @@ class DynamoBackend(Backend):
         self.region = region
 
     async def init(self) -> None:
-        self.client = await self.session.create_client(
+        self.client = await self.session.create_client(  # pyright: ignore[reportUnknownMemberType]
             "dynamodb", region_name=self.region
         ).__aenter__()
 

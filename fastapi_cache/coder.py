@@ -8,7 +8,9 @@ import pendulum
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseConfig, ValidationError, fields
 from starlette.responses import JSONResponse
-from starlette.templating import _TemplateResponse as TemplateResponse
+from starlette.templating import (
+    _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
+)
 
 _T = TypeVar("_T", bound=type)
 
@@ -22,15 +24,15 @@ CONVERTERS: Dict[str, Callable[[str], Any]] = {
 
 
 class JsonEncoder(json.JSONEncoder):
-    def default(self, obj: Any) -> Any:
-        if isinstance(obj, datetime.datetime):
-            return {"val": str(obj), "_spec_type": "datetime"}
-        elif isinstance(obj, datetime.date):
-            return {"val": str(obj), "_spec_type": "date"}
-        elif isinstance(obj, Decimal):
-            return {"val": str(obj), "_spec_type": "decimal"}
+    def default(self, o: Any) -> Any:
+        if isinstance(o, datetime.datetime):
+            return {"val": str(o), "_spec_type": "datetime"}
+        elif isinstance(o, datetime.date):
+            return {"val": str(o), "_spec_type": "date"}
+        elif isinstance(o, Decimal):
+            return {"val": str(o), "_spec_type": "decimal"}
         else:
-            return jsonable_encoder(obj)
+            return jsonable_encoder(o)
 
 
 def object_hook(obj: Any) -> Any:

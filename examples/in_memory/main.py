@@ -1,3 +1,4 @@
+# pyright: reportGeneralTypeIssues=false
 from typing import Dict, Optional
 
 import pendulum

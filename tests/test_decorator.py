@@ -45,10 +45,10 @@ def test_date() -> None:
         assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]
 
         # now test with cache disabled, as that's a separate code path
-        FastAPICache._enable = False
+        FastAPICache._enable = False  # pyright: ignore[reportPrivateUsage]
         response = client.get("/date")
         assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]
-        FastAPICache._enable = True
+        FastAPICache._enable = True  # pyright: ignore[reportPrivateUsage]
 
 
 def test_sync() -> None:
