@@ -101,6 +101,30 @@ key_builder | which key builder to use, default to builtin
 
 You can also use `cache` as decorator like other cache tools to cache common function result.
 
+
+### Supported data types
+
+When using the (default) `JsonCoder`, the cache can store any data type that FastAPI can convert to JSON, including Pydantic models and dataclasses,
+_provided_ that your endpoint has a correct return type annotation, unless
+the return type is a standard JSON-supported type such as a dictionary or a list.
+
+E.g. for an endpoint that returns a Pydantic model named `SomeModel`:
+
+```python
+from .models import SomeModel, create_some_model
+
+@app.get("/foo")
+@cache(expire=60)
+async def foo() -> SomeModel:
+    return create_some_model
+```
+
+It is not sufficient to configure a response model in the route decorator; the cache needs to know what the method itself returns.
+
+If no return type decorator is given, the primitive JSON type is returned instead.
+
+For broader type support, use the `fastapi_cache.coder.PickleCoder` or implement a custom coder (see below).
+
 ### Custom coder
 
 By default use `JsonCoder`, you can write custom coder to encode and decode cache result, just need

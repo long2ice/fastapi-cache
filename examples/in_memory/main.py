@@ -7,6 +7,7 @@ from starlette.responses import JSONResponse, Response
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -78,6 +79,20 @@ class SomeClass:
 # register an instance method as a handler
 instance = SomeClass(17)
 app.get("/method")(cache(namespace="test")(instance.handler_method))
+
+
+# cache a Pydantic model instance; the return type annotation is required in this case
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+
+@app.get("/pydantic_instance")
+@cache(namespace="test", expire=5)
+async def pydantic_instance() -> Item:
+    return Item(name="Something", description="An instance of a Pydantic model", price=10.5)
 
 
 @app.on_event("startup")

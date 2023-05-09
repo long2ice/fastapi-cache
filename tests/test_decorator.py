@@ -79,3 +79,10 @@ def test_method() -> None:
     with TestClient(app) as client:
         response = client.get("/method")
         assert response.json() == 17
+
+
+def test_pydantic_model() -> None:
+    with TestClient(app) as client:
+        r1 = client.get("/pydantic_instance").json()
+        r2 = client.get("/pydantic_instance").json()
+        assert r1 == r2

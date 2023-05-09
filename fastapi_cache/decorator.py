@@ -10,6 +10,7 @@ else:
     from typing_extensions import ParamSpec
 
 from fastapi.concurrency import run_in_threadpool
+from fastapi.dependencies.utils import get_typed_return_annotation
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -79,6 +80,7 @@ def cache(
             (param for param in signature.parameters.values() if param.annotation is Response),
             None,
         )
+        return_type = get_typed_return_annotation(func)
 
         @wraps(func)
         async def inner(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -139,7 +141,7 @@ def cache(
                 ttl, ret = 0, None
             if not request:
                 if ret is not None:
-                    return coder.decode(ret)
+                    return coder.decode_as_type(ret, type_=return_type)
                 ret = await ensure_async_func(*args, **kwargs)
                 try:
                     await backend.set(cache_key, coder.encode(ret), expire)
@@ -161,7 +163,7 @@ def cache(
                         response.status_code = 304
                         return response
                     response.headers["ETag"] = etag
-                return coder.decode(ret)
+                return coder.decode_as_type(ret, type_=return_type)
 
             ret = await ensure_async_func(*args, **kwargs)
             encoded_ret = coder.encode(ret)
