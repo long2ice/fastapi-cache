@@ -53,6 +53,7 @@ target-version = ['py36', 'py37', 'py38', 'py39']
 
 [tool.mypy]
 files = ["fastapi_cache", "examples", "tests"]
+python_version = "3.7"
 # equivalent of --strict
 warn_unused_configs = true
 disallow_any_generics = true
