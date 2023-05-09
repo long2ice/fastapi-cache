@@ -1,7 +1,8 @@
-from typing import Any, Awaitable, Callable, Optional, Protocol, Union
+from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Union
 
 from starlette.requests import Request
 from starlette.responses import Response
+from typing_extensions import Protocol
 
 
 _Func = Callable[..., Any]
@@ -15,7 +16,7 @@ class KeyBuilder(Protocol):
         *,
         request: Optional[Request] = ...,
         response: Optional[Response] = ...,
-        args: tuple[Any, ...] = ...,
-        kwargs: dict[str, Any] = ...,
+        args: Tuple[Any, ...] = ...,
+        kwargs: Dict[str, Any] = ...,
     ) -> Union[Awaitable[str], str]:
         ...

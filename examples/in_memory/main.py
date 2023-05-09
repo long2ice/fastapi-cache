@@ -1,3 +1,5 @@
+from typing import Dict, Optional
+
 import pendulum
 import uvicorn
 from fastapi import FastAPI
@@ -84,9 +86,9 @@ app.get("/method")(cache(namespace="test")(instance.handler_method))
 # cache a Pydantic model instance; the return type annotation is required in this case
 class Item(BaseModel):
     name: str
-    description: str | None = None
+    description: Optional[str] = None
     price: float
-    tax: float | None = None
+    tax: Optional[float] = None
 
 
 @app.get("/pydantic_instance")
@@ -110,7 +112,7 @@ async def uncached_put():
 @cache(namespace="test", expire=5, injected_dependency_namespace="monty_python")
 def namespaced_injection(
     __fastapi_cache_request: int = 42, __fastapi_cache_response: int = 17
-) -> dict[str, int]:
+) -> Dict[str, int]:
     return {
         "__fastapi_cache_request": __fastapi_cache_request,
         "__fastapi_cache_response": __fastapi_cache_response,

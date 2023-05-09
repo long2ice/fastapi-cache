@@ -10,10 +10,10 @@ from pydantic import BaseConfig, ValidationError, fields
 from starlette.responses import JSONResponse
 from starlette.templating import _TemplateResponse as TemplateResponse
 
-_T = TypeVar("_T")
+_T = TypeVar("_T", bound=type)
 
 
-CONVERTERS: dict[str, Callable[[str], Any]] = {
+CONVERTERS: Dict[str, Callable[[str], Any]] = {
     "date": lambda x: pendulum.parse(x, exact=True),
     "datetime": lambda x: pendulum.parse(x, exact=True),
     "decimal": Decimal,
