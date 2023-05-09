@@ -11,12 +11,12 @@ _Func = Callable[..., Any]
 class KeyBuilder(Protocol):
     def __call__(
         self,
-        _function: _Func,
-        _namespace: str = ...,
+        __function: _Func,
+        __namespace: str = ...,
         *,
         request: Optional[Request] = ...,
         response: Optional[Response] = ...,
-        args: Tuple[Any, ...] = ...,
-        kwargs: Dict[str, Any] = ...,
+        args: Tuple[Any, ...],
+        kwargs: Dict[str, Any],
     ) -> Union[Awaitable[str], str]:
         ...

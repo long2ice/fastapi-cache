@@ -2,7 +2,7 @@ import logging
 import sys
 from functools import wraps
 from inspect import Parameter, Signature, isawaitable, iscoroutinefunction
-from typing import Awaitable, Callable, List, Optional, Type, TypeVar, Union
+from typing import Awaitable, Callable, List, Optional, Type, TypeVar, Union, cast
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
@@ -111,11 +111,11 @@ def cache(
                 else:
                     # sync, wrap in thread and return async
                     # see above why we have to await even although caller also awaits.
-                    return await run_in_threadpool(func, *args, **kwargs)
+                    return await run_in_threadpool(func, *args, **kwargs)  # type: ignore[arg-type]
 
             copy_kwargs = kwargs.copy()
-            request: Optional[Request] = copy_kwargs.pop(request_param.name, None)
-            response: Optional[Response] = copy_kwargs.pop(response_param.name, None)
+            request: Optional[Request] = copy_kwargs.pop(request_param.name, None)  # type: ignore[assignment]
+            response: Optional[Response] = copy_kwargs.pop(response_param.name, None)  # type: ignore[assignment]
             if (
                 request and request.headers.get("Cache-Control") in ("no-store", "no-cache")
             ) or not FastAPICache.get_enable():
@@ -137,6 +137,7 @@ def cache(
             )
             if isawaitable(cache_key):
                 cache_key = await cache_key
+            assert isinstance(cache_key, str)
 
             try:
                 ttl, cached = await backend.get_with_ttl(cache_key)
@@ -147,7 +148,7 @@ def cache(
                 ttl, cached = 0, None
             if not request:
                 if cached is not None:
-                    return coder.decode_as_type(cached, type_=return_type)
+                    return cast(R, coder.decode_as_type(cached, type_=return_type))
                 ret = await ensure_async_func(*args, **kwargs)
                 try:
                     await backend.set(cache_key, coder.encode(ret), expire)
@@ -169,7 +170,7 @@ def cache(
                         response.status_code = 304
                         return response
                     response.headers["ETag"] = etag
-                return coder.decode_as_type(cached, type_=return_type)
+                return cast(R, coder.decode_as_type(cached, type_=return_type))
 
             ret = await ensure_async_func(*args, **kwargs)
             encoded_ret = coder.encode(ret)
@@ -185,7 +186,7 @@ def cache(
                 response.headers["ETag"] = etag
             return ret
 
-        inner.__signature__ = _augment_signature(wrapped_signature, *to_inject)
+        inner.__signature__ = _augment_signature(wrapped_signature, *to_inject)  # type: ignore[attr-defined]
         return inner
 
     return wrapper
