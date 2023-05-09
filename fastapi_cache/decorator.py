@@ -83,7 +83,7 @@ def cache(
     def wrapper(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[Union[R, Response]]]:
         # get_typed_signature ensures that any forward references are resolved first
         wrapped_signature = get_typed_signature(func)
-        to_inject: list[Parameter] = []
+        to_inject: List[Parameter] = []
         request_param = _locate_param(wrapped_signature, injected_request, to_inject)
         response_param = _locate_param(wrapped_signature, injected_response, to_inject)
         return_type = get_typed_return_annotation(func)
