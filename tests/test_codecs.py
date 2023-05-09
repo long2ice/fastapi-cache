@@ -36,7 +36,7 @@ class PDItem(BaseModel):
 )
 def test_pickle_coder(value: Any) -> None:
     encoded_value = PickleCoder.encode(value)
-    assert isinstance(encoded_value, str)
+    assert isinstance(encoded_value, bytes)
     decoded_value = PickleCoder.decode(encoded_value)
     assert decoded_value == value
 
@@ -55,12 +55,12 @@ def test_pickle_coder(value: Any) -> None:
 )
 def test_json_coder(value: Any, return_type) -> None:
     encoded_value = JsonCoder.encode(value)
-    assert isinstance(encoded_value, str)
+    assert isinstance(encoded_value, bytes)
     decoded_value = JsonCoder.decode_as_type(encoded_value, type_=return_type)
     assert decoded_value == value
 
 
 def test_json_coder_validation_error() -> None:
-    invalid = '{"name": "incomplete"}'
+    invalid = b'{"name": "incomplete"}'
     with pytest.raises(ValidationError):
         JsonCoder.decode_as_type(invalid, type_=PDItem)

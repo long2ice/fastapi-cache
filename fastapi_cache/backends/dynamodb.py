@@ -39,11 +39,11 @@ class DynamoBackend(Backend):
     async def close(self) -> None:
         self.client = await self.client.__aexit__(None, None, None)
 
-    async def get_with_ttl(self, key: str) -> Tuple[int, str]:
+    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
         response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
 
         if "Item" in response:
-            value = response["Item"].get("value", {}).get("S")
+            value = response["Item"].get("value", {}).get("B")
             ttl = response["Item"].get("ttl", {}).get("N")
 
             if not ttl:
@@ -56,12 +56,12 @@ class DynamoBackend(Backend):
 
         return 0, None
 
-    async def get(self, key: str) -> str:
+    async def get(self, key: str) -> Optional[bytes]:
         response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
         if "Item" in response:
-            return response["Item"].get("value", {}).get("S")
+            return response["Item"].get("value", {}).get("B")
 
-    async def set(self, key: str, value: str, expire: Optional[int] = None) -> None:
+    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         ttl = (
             {
                 "ttl": {
@@ -83,7 +83,7 @@ class DynamoBackend(Backend):
             Item={
                 **{
                     "key": {"S": key},
-                    "value": {"S": value},
+                    "value": {"B": value},
                 },
                 **ttl,
             },

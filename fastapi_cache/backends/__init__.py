@@ -4,15 +4,15 @@ from typing import Optional, Tuple
 
 class Backend:
     @abc.abstractmethod
-    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[str]]:
+    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get(self, key: str) -> Optional[str]:
+    async def get(self, key: str) -> Optional[bytes]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def set(self, key: str, value: str, expire: Optional[int] = None) -> None:
+    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod

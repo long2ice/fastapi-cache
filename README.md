@@ -78,7 +78,7 @@ async def index():
 
 @app.on_event("startup")
 async def startup():
-    redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
+    redis = aioredis.from_url("redis://localhost")
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
 ```
@@ -179,6 +179,13 @@ async def index():
 
 `InMemoryBackend` store cache data in memory and use lazy delete, which mean if you don't access it after cached, it
 will not delete automatically.
+
+
+### RedisBackend
+
+When using the redis backend, please make sure you pass in a redis client that does [_not_ decode responses][redis-decode] (`decode_responses` **must** be `False`, which is the default). Cached data is stored as `bytes` (binary), decoding these i the redis client would break caching.
+
+[redis-decode]: https://redis-py.readthedocs.io/en/latest/examples/connection_examples.html#by-default-Redis-return-binary-responses,-to-decode-them-use-decode_responses=True
 
 ## Tests and coverage
 
