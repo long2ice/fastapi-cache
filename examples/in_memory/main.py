@@ -106,6 +106,17 @@ async def uncached_put():
     return {"value": put_ret}
 
 
+@app.get("/namespaced_injection")
+@cache(namespace="test", expire=5, injected_dependency_namespace="monty_python")
+def namespaced_injection(
+    __fastapi_cache_request: int = 42, __fastapi_cache_response: int = 17
+) -> dict[str, int]:
+    return {
+        "__fastapi_cache_request": __fastapi_cache_request,
+        "__fastapi_cache_response": __fastapi_cache_response,
+    }
+
+
 @app.on_event("startup")
 async def startup():
     FastAPICache.init(InMemoryBackend())
