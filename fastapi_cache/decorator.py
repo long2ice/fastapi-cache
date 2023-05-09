@@ -152,7 +152,7 @@ def cache(
                 return ret
 
             if request.method != "GET":
-                return await ensure_async_func(request, *args, **kwargs)
+                return await ensure_async_func(*args, **kwargs)
 
             if_none_match = request.headers.get("if-none-match")
             if ret is not None:

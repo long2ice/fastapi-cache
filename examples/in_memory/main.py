@@ -95,6 +95,17 @@ async def pydantic_instance() -> Item:
     return Item(name="Something", description="An instance of a Pydantic model", price=10.5)
 
 
+put_ret = 0
+
+
+@app.put("/uncached_put")
+@cache(namespace="test", expire=5)
+async def uncached_put():
+    global put_ret
+    put_ret = put_ret + 1
+    return {"value": put_ret}
+
+
 @app.on_event("startup")
 async def startup():
     FastAPICache.init(InMemoryBackend())

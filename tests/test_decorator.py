@@ -86,3 +86,11 @@ def test_pydantic_model() -> None:
         r1 = client.get("/pydantic_instance").json()
         r2 = client.get("/pydantic_instance").json()
         assert r1 == r2
+
+
+def test_non_get() -> None:
+    with TestClient(app) as client:
+        response = client.put("/uncached_put")
+        assert response.json() == {"value": 1}
+        response = client.put("/uncached_put")
+        assert response.json() == {"value": 2}
