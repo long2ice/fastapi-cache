@@ -121,6 +121,7 @@ def cache(
             ) or not FastAPICache.get_enable():
                 return await ensure_async_func(*args, **kwargs)
 
+            prefix = FastAPICache.get_prefix()
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
             key_builder = key_builder or FastAPICache.get_key_builder()
@@ -128,7 +129,7 @@ def cache(
 
             cache_key = key_builder(
                 func,
-                namespace,
+                f"{prefix}:{namespace}",
                 request=request,
                 response=response,
                 args=args,
