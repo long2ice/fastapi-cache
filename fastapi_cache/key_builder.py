@@ -13,13 +13,7 @@ def default_key_builder(
     args: Optional[tuple[Any, ...]] = None,
     kwargs: Optional[dict[str, Any]] = None,
 ) -> str:
-    from fastapi_cache import FastAPICache
-
-    prefix = f"{FastAPICache.get_prefix()}:{namespace}:"
-    cache_key = (
-        prefix
-        + hashlib.md5(  # nosec:B303
-            f"{func.__module__}:{func.__name__}:{args}:{kwargs}".encode()
-        ).hexdigest()
-    )
-    return cache_key
+    cache_key = hashlib.md5(  # nosec:B303
+        f"{func.__module__}:{func.__name__}:{args}:{kwargs}".encode()
+    ).hexdigest()
+    return f"{namespace}:{cache_key}"
