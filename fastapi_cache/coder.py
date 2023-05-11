@@ -1,9 +1,8 @@
-import codecs
 import datetime
 import json
 import pickle  # nosec:B403
 from decimal import Decimal
-from typing import Any, Callable, ClassVar, Dict, TypeVar, overload
+from typing import Any, Callable, ClassVar, Dict, Optional, TypeVar, Union, overload
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
@@ -46,11 +45,11 @@ def object_hook(obj: Any) -> Any:
 
 class Coder:
     @classmethod
-    def encode(cls, value: Any) -> str:
+    def encode(cls, value: Any) -> bytes:
         raise NotImplementedError
 
     @classmethod
-    def decode(cls, value: str) -> Any:
+    def decode(cls, value: bytes) -> Any:
         raise NotImplementedError
 
     # (Shared) cache for endpoint return types to Pydantic model fields.
@@ -62,16 +61,16 @@ class Coder:
 
     @overload
     @classmethod
-    def decode_as_type(cls, value: str, type_: _T) -> _T:
+    def decode_as_type(cls, value: bytes, *, type_: _T) -> _T:
         ...
 
     @overload
     @classmethod
-    def decode_as_type(cls, value: str, *, type_: None) -> Any:
+    def decode_as_type(cls, value: bytes, *, type_: None) -> Any:
         ...
 
     @classmethod
-    def decode_as_type(cls, value: str, *, type_: _T | None) -> _T | Any:
+    def decode_as_type(cls, value: bytes, *, type_: Optional[_T]) -> Union[_T, Any]:
         """Decode value to the specific given type
 
         The default implementation uses the Pydantic model system to convert the value.
@@ -95,29 +94,32 @@ class Coder:
 
 class JsonCoder(Coder):
     @classmethod
-    def encode(cls, value: Any) -> str:
+    def encode(cls, value: Any) -> bytes:
         if isinstance(value, JSONResponse):
-            return value.body.decode()
-        return json.dumps(value, cls=JsonEncoder)
+            return value.body
+        return json.dumps(value, cls=JsonEncoder).encode()
 
     @classmethod
-    def decode(cls, value: str) -> str:
-        return json.loads(value, object_hook=object_hook)
+    def decode(cls, value: bytes) -> Any:
+        # explicitly decode from UTF-8 bytes first, as otherwise
+        # json.loads() will first have to detect the correct UTF-
+        # encoding used.
+        return json.loads(value.decode(), object_hook=object_hook)
 
 
 class PickleCoder(Coder):
     @classmethod
-    def encode(cls, value: Any) -> str:
+    def encode(cls, value: Any) -> bytes:
         if isinstance(value, TemplateResponse):
             value = value.body
-        return codecs.encode(pickle.dumps(value), "base64").decode()
+        return pickle.dumps(value)
 
     @classmethod
-    def decode(cls, value: str) -> Any:
-        return pickle.loads(codecs.decode(value.encode(), "base64"))  # nosec:B403,B301
+    def decode(cls, value: bytes) -> Any:
+        return pickle.loads(value)  # nosec:B403,B301
 
     @classmethod
-    def decode_as_type(cls, value: str, *, type_: Any) -> Any:
+    def decode_as_type(cls, value: bytes, *, type_: Optional[_T]) -> Any:
         # Pickle already produces the correct type on decoding, no point
         # in paying an extra performance penalty for pydantic to discover
         # the same.

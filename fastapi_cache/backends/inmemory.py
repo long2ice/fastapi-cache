@@ -8,7 +8,7 @@ from fastapi_cache.backends import Backend
 
 @dataclass
 class Value:
-    data: str
+    data: bytes
     ttl_ts: int
 
 
@@ -29,21 +29,21 @@ class InMemoryBackend(Backend):
                 return v
         return None
 
-    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[str]]:
+    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
         async with self._lock:
             v = self._get(key)
             if v:
                 return v.ttl_ts - self._now, v.data
             return 0, None
 
-    async def get(self, key: str) -> Optional[str]:
+    async def get(self, key: str) -> Optional[bytes]:
         async with self._lock:
             v = self._get(key)
             if v:
                 return v.data
             return None
 
-    async def set(self, key: str, value: str, expire: Optional[int] = None) -> None:
+    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         async with self._lock:
             self._store[key] = Value(value, self._now + (expire or 0))
 

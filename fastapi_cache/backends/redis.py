@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from redis.asyncio.client import Redis
 from redis.asyncio.cluster import RedisCluster
@@ -7,18 +7,18 @@ from fastapi_cache.backends import Backend
 
 
 class RedisBackend(Backend):
-    def __init__(self, redis: Redis[str] | RedisCluster[str]):
+    def __init__(self, redis: Union[Redis[bytes], RedisCluster[bytes]]):
         self.redis = redis
         self.is_cluster: bool = isinstance(redis, RedisCluster)
 
-    async def get_with_ttl(self, key: str) -> Tuple[int, str]:
+    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
         async with self.redis.pipeline(transaction=not self.is_cluster) as pipe:
             return await pipe.ttl(key).get(key).execute()
 
-    async def get(self, key: str) -> Optional[str]:
+    async def get(self, key: str) -> Optional[bytes]:
         return await self.redis.get(key)
 
-    async def set(self, key: str, value: str, expire: Optional[int] = None) -> None:
+    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         return await self.redis.set(key, value, ex=expire)
 
     async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
