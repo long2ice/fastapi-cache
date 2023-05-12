@@ -1,9 +1,8 @@
 from typing import ClassVar, Optional, Type
 
-from fastapi_cache.backends import Backend
 from fastapi_cache.coder import Coder, JsonCoder
 from fastapi_cache.key_builder import default_key_builder
-from fastapi_cache.types import KeyBuilder
+from fastapi_cache.types import Backend, KeyBuilder
 
 
 __all__ = [

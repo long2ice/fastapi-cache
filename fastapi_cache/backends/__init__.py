@@ -1,20 +1,29 @@
-import abc
-from typing import Optional, Tuple
+from fastapi_cache.types import Backend
+from fastapi_cache.backends import inmemory
 
 
-class Backend:
-    @abc.abstractmethod
-    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
-        raise NotImplementedError
+__all__ = ["Backend", "inmemory"]
 
-    @abc.abstractmethod
-    async def get(self, key: str) -> Optional[bytes]:
-        raise NotImplementedError
+# import each backend in turn and add to __all__. This syntax
+# is explicitly supported by type checkers, while more dynamic
+# syntax would not be recognised.
+try:
+    from fastapi_cache.backends import dynamodb
+except ImportError:
+    pass
+else:
+    __all__ += ["dynamodb"]
 
-    @abc.abstractmethod
-    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
-        raise NotImplementedError
+try:
+    from fastapi_cache.backends import memcached
+except ImportError:
+    pass
+else:
+    __all__ += ["memcached"]
 
-    @abc.abstractmethod
-    async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
-        raise NotImplementedError
+try:
+    from fastapi_cache.backends import redis
+except ImportError:
+    pass
+else:
+    __all__ += ["redis"]

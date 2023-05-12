@@ -3,7 +3,7 @@ from asyncio import Lock
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 
-from fastapi_cache.backends import Backend
+from fastapi_cache.types import Backend
 
 
 @dataclass

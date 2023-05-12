@@ -2,7 +2,7 @@ from typing import Optional, Tuple
 
 from aiomcache import Client
 
-from fastapi_cache.backends import Backend
+from fastapi_cache.types import Backend
 
 
 class MemcachedBackend(Backend):
