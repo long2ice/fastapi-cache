@@ -2,7 +2,7 @@ import logging
 import sys
 from functools import wraps
 from inspect import Parameter, Signature, isawaitable, iscoroutinefunction
-from typing import Awaitable, Callable, Optional, Type, TypeVar
+from typing import Awaitable, Callable, List, Optional, Type, TypeVar, Union, cast
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
@@ -29,14 +29,14 @@ def _augment_signature(signature: Signature, *extra: Parameter) -> Signature:
         return signature
 
     parameters = list(signature.parameters.values())
-    variadic_keyword_params = []
+    variadic_keyword_params: List[Parameter] = []
     while parameters and parameters[-1].kind is Parameter.VAR_KEYWORD:
         variadic_keyword_params.append(parameters.pop())
 
     return signature.replace(parameters=[*parameters, *extra, *variadic_keyword_params])
 
 
-def _locate_param(sig: Signature, dep: Parameter, to_inject: list[Parameter]) -> Parameter:
+def _locate_param(sig: Signature, dep: Parameter, to_inject: List[Parameter]) -> Parameter:
     """Locate an existing parameter in the decorated endpoint
 
     If not found, returns the injectable parameter, and adds it to the to_inject list.
@@ -56,9 +56,9 @@ def cache(
     expire: Optional[int] = None,
     coder: Optional[Type[Coder]] = None,
     key_builder: Optional[KeyBuilder] = None,
-    namespace: Optional[str] = "",
+    namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
-) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
     :param namespace:
@@ -80,16 +80,16 @@ def cache(
         kind=Parameter.KEYWORD_ONLY,
     )
 
-    def wrapper(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
+    def wrapper(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[Union[R, Response]]]:
         # get_typed_signature ensures that any forward references are resolved first
         wrapped_signature = get_typed_signature(func)
-        to_inject: list[Parameter] = []
+        to_inject: List[Parameter] = []
         request_param = _locate_param(wrapped_signature, injected_request, to_inject)
         response_param = _locate_param(wrapped_signature, injected_response, to_inject)
         return_type = get_typed_return_annotation(func)
 
         @wraps(func)
-        async def inner(*args: P.args, **kwargs: P.kwargs) -> R:
+        async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
@@ -111,11 +111,11 @@ def cache(
                 else:
                     # sync, wrap in thread and return async
                     # see above why we have to await even although caller also awaits.
-                    return await run_in_threadpool(func, *args, **kwargs)
+                    return await run_in_threadpool(func, *args, **kwargs)  # type: ignore[arg-type]
 
             copy_kwargs = kwargs.copy()
-            request: Optional[Request] = copy_kwargs.pop(request_param.name, None)
-            response: Optional[Response] = copy_kwargs.pop(response_param.name, None)
+            request: Optional[Request] = copy_kwargs.pop(request_param.name, None)  # type: ignore[assignment]
+            response: Optional[Response] = copy_kwargs.pop(response_param.name, None)  # type: ignore[assignment]
             if (
                 request and request.headers.get("Cache-Control") in ("no-store", "no-cache")
             ) or not FastAPICache.get_enable():
@@ -137,17 +137,18 @@ def cache(
             )
             if isawaitable(cache_key):
                 cache_key = await cache_key
+            assert isinstance(cache_key, str)
 
             try:
-                ttl, ret = await backend.get_with_ttl(cache_key)
+                ttl, cached = await backend.get_with_ttl(cache_key)
             except Exception:
                 logger.warning(
                     f"Error retrieving cache key '{cache_key}' from backend:", exc_info=True
                 )
-                ttl, ret = 0, None
+                ttl, cached = 0, None
             if not request:
-                if ret is not None:
-                    return coder.decode_as_type(ret, type_=return_type)
+                if cached is not None:
+                    return cast(R, coder.decode_as_type(cached, type_=return_type))
                 ret = await ensure_async_func(*args, **kwargs)
                 try:
                     await backend.set(cache_key, coder.encode(ret), expire)
@@ -161,15 +162,15 @@ def cache(
                 return await ensure_async_func(*args, **kwargs)
 
             if_none_match = request.headers.get("if-none-match")
-            if ret is not None:
+            if cached is not None:
                 if response:
                     response.headers["Cache-Control"] = f"max-age={ttl}"
-                    etag = f"W/{hash(ret)}"
+                    etag = f"W/{hash(cached)}"
                     if if_none_match == etag:
                         response.status_code = 304
                         return response
                     response.headers["ETag"] = etag
-                return coder.decode_as_type(ret, type_=return_type)
+                return cast(R, coder.decode_as_type(cached, type_=return_type))
 
             ret = await ensure_async_func(*args, **kwargs)
             encoded_ret = coder.encode(ret)
@@ -179,12 +180,13 @@ def cache(
             except Exception:
                 logger.warning(f"Error setting cache key '{cache_key}' in backend:", exc_info=True)
 
-            response.headers["Cache-Control"] = f"max-age={expire}"
-            etag = f"W/{hash(encoded_ret)}"
-            response.headers["ETag"] = etag
+            if response:
+                response.headers["Cache-Control"] = f"max-age={expire}"
+                etag = f"W/{hash(encoded_ret)}"
+                response.headers["ETag"] = etag
             return ret
 
-        inner.__signature__ = _augment_signature(wrapped_signature, *to_inject)
+        inner.__signature__ = _augment_signature(wrapped_signature, *to_inject)  # type: ignore[attr-defined]
         return inner
 
     return wrapper

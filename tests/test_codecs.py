@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Tuple, Type
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -46,14 +46,14 @@ def test_pickle_coder(value: Any) -> None:
     [
         (1, None),
         ("some_string", None),
-        ((1, 2), tuple[int, int]),
+        ((1, 2), Tuple[int, int]),
         ([1, 2, 3], None),
         ({"some_key": 1, "other_key": 2}, None),
         (DCItem(name="foo", price=42.0, description="some dataclass item", tax=0.2), DCItem),
         (PDItem(name="foo", price=42.0, description="some pydantic item", tax=0.2), PDItem),
     ],
 )
-def test_json_coder(value: Any, return_type) -> None:
+def test_json_coder(value: Any, return_type: Type[Any]) -> None:
     encoded_value = JsonCoder.encode(value)
     assert isinstance(encoded_value, bytes)
     decoded_value = JsonCoder.decode_as_type(encoded_value, type_=return_type)

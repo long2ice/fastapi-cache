@@ -2,12 +2,17 @@ name: ci
 on: [ push, pull_request ]
 jobs:
   ci:
+    strategy:
+      matrix:
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+    
+    name: "Test on Python ${{ matrix.python }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: "${{ matrix.python }}"
       - name: Install and configure Poetry
         run: |
           pip install -U pip poetry

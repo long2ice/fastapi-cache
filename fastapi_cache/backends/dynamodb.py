@@ -1,10 +1,15 @@
 import datetime
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from aiobotocore.client import AioBaseClient
-from aiobotocore.session import get_session, AioSession
+from aiobotocore.session import AioSession, get_session
 
 from fastapi_cache.backends import Backend
+
+if TYPE_CHECKING:
+    from types_aiobotocore_dynamodb import DynamoDBClient
+else:
+    DynamoDBClient = AioBaseClient
 
 
 class DynamoBackend(Backend):
@@ -25,14 +30,18 @@ class DynamoBackend(Backend):
         >> FastAPICache.init(dynamodb)
     """
 
+    client: DynamoDBClient
+    session: AioSession
+    table_name: str
+    region: Optional[str]
+
     def __init__(self, table_name: str, region: Optional[str] = None) -> None:
         self.session: AioSession = get_session()
-        self.client: Optional[AioBaseClient] = None  # Needs async init
         self.table_name = table_name
         self.region = region
 
     async def init(self) -> None:
-        self.client = await self.session.create_client(
+        self.client = await self.session.create_client(  # pyright: ignore[reportUnknownMemberType]
             "dynamodb", region_name=self.region
         ).__aenter__()
 
@@ -60,6 +69,7 @@ class DynamoBackend(Backend):
         response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
         if "Item" in response:
             return response["Item"].get("value", {}).get("B")
+        return None
 
     async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         ttl = (
