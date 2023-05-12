@@ -144,6 +144,7 @@ def cache(
             expire = expire or FastAPICache.get_expire()
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
+            cache_status_header = FastAPICache.get_cache_status_header()
 
             cache_key = key_builder(
                 func,
@@ -181,6 +182,7 @@ def cache(
                         {
                             "Cache-Control": f"max-age={expire}",
                             "ETag": f"W/{hash(to_cache)}",
+                            cache_status_header: "MISS",
                         }
                     )
 
@@ -191,6 +193,7 @@ def cache(
                         {
                             "Cache-Control": f"max-age={ttl}",
                             "ETag": etag,
+                            cache_status_header: "HIT",
                         }
                     )
 

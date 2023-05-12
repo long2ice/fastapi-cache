@@ -99,6 +99,7 @@ namespace | str, namespace to use to store certain cache items
 coder | which coder to use, e.g. JsonCoder
 key_builder | which key builder to use, default to builtin
 injected_dependency_namespace | prefix for injected dependency keywords, defaults to `__fastapi_cache`.
+cache_status_header | Name for the header on the response indicating if the request was served from cache; either `HIT` or `MISS`. Defaults to `X-FastAPI-Cache`.
 
 You can also use `cache` as decorator like other cache tools to cache common function result.
 
