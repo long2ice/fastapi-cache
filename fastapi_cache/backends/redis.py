@@ -3,11 +3,11 @@ from typing import Optional, Tuple, Union
 from redis.asyncio.client import Redis
 from redis.asyncio.cluster import RedisCluster
 
-from fastapi_cache.backends import Backend
+from fastapi_cache.types import Backend
 
 
 class RedisBackend(Backend):
-    def __init__(self, redis: Union[Redis[bytes], RedisCluster[bytes]]):
+    def __init__(self, redis: Union["Redis[bytes]", "RedisCluster[bytes]"]):
         self.redis = redis
         self.is_cluster: bool = isinstance(redis, RedisCluster)
 

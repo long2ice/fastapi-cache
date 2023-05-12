@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, Tuple
 from aiobotocore.client import AioBaseClient
 from aiobotocore.session import AioSession, get_session
 
-from fastapi_cache.backends import Backend
+from fastapi_cache.types import Backend
 
 if TYPE_CHECKING:
     from types_aiobotocore_dynamodb import DynamoDBClient
