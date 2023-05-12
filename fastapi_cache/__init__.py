@@ -23,6 +23,7 @@ class FastAPICache:
     _init: ClassVar[bool] = False
     _coder: ClassVar[Optional[Type[Coder]]] = None
     _key_builder: ClassVar[Optional[KeyBuilder]] = None
+    _cache_status_header: ClassVar[Optional[str]] = None
     _enable: ClassVar[bool] = True
 
     @classmethod
@@ -33,6 +34,7 @@ class FastAPICache:
         expire: Optional[int] = None,
         coder: Type[Coder] = JsonCoder,
         key_builder: KeyBuilder = default_key_builder,
+        cache_status_header: str = "X-FastAPI-Cache",
         enable: bool = True,
     ) -> None:
         if cls._init:
@@ -43,6 +45,7 @@ class FastAPICache:
         cls._expire = expire
         cls._coder = coder
         cls._key_builder = key_builder
+        cls._cache_status_header = cache_status_header
         cls._enable = enable
 
     @classmethod
@@ -53,6 +56,7 @@ class FastAPICache:
         cls._expire = None
         cls._coder = None
         cls._key_builder = None
+        cls._cache_status_header = None
         cls._enable = True
 
     @classmethod
@@ -78,6 +82,11 @@ class FastAPICache:
     def get_key_builder(cls) -> KeyBuilder:
         assert cls._key_builder, "You must call init first!"  # nosec: B101
         return cls._key_builder
+
+    @classmethod
+    def get_cache_status_header(cls) -> str:
+        assert cls._cache_status_header, "You must call init first!"  # nosec: B101
+        return cls._cache_status_header
 
     @classmethod
     def get_enable(cls) -> bool:
