@@ -42,10 +42,11 @@ pytest = "*"
 requests = "*"
 coverage = "^6.5.0"
 httpx = "*"
+tox = "^4.5.1"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.extras]
 redis = ["redis"]
