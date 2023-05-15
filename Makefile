@@ -5,7 +5,7 @@ up:
 	@poetry update
 
 deps:
-	@poetry install --no-root -E all
+	@poetry install --no-root --with=linting -E all
 
 style: deps
 	@isort -src $(checkfiles)
@@ -25,5 +25,3 @@ build: clean deps
 
 clean:
 	@rm -rf ./dist
-
-ci: check test
