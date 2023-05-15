@@ -16,10 +16,19 @@ jobs:
       - name: Install Poetry
         run: pipx install poetry
       - name: Setup Python
+        id: setup-python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
           cache: poetry
+      - name: Cache mypy cache
+        uses: actions/cache@v3
+        with:
+          path: .mypy_cache
+          key: ${{ runner.os }}-mypy-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mypy-${{ steps.setup-python.outputs.python-version }}-
+            ${{ runner.os }}-mypy-
       - name: Install linting requirements
         run: poetry install --no-root --with=linting --all-extras
       - name: Execute linters
