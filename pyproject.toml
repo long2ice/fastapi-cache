@@ -25,18 +25,23 @@ aiobotocore = { version = "^1.4.1", optional = true }
 typing-extensions = { version = ">=4.1.0" }
 aiohttp = { version = ">=3.8.3", markers = "python_version >= \"3.11\"" }
 
+[tool.poetry.group.linting]
+optional = true
+
+[tool.poetry.group.linting.dependencies]
+flake8 = { version = "*", markers = "python_version >= \"3.10\"" }
+isort = { version = "*", markers = "python_version >= \"3.10\"" }
+black = { version = "*", markers = "python_version >= \"3.10\"" }
+mypy = { version = "^1.2.0", markers = "python_version >= \"3.10\"" }
+pyright = { version = "^1.1.306", markers="python_version >= \"3.10\"" }
+types-aiobotocore = { extras = ["dynamodb"], version = "^2.5.0.post2", markers = "python_version >= \"3.10\"" }
+types-redis = { version = "^4.5.4.2", markers = "python_version >= \"3.10\"" }
+
 [tool.poetry.group.dev.dependencies]
-flake8 = "*"
-isort = "*"
-black = "*"
 pytest = "*"
 requests = "*"
 coverage = "^6.5.0"
 httpx = "*"
-mypy = "^1.2.0"
-types-redis = "^4.5.4.2"
-pyright = "^1.1.306"
-types-aiobotocore = { extras = ["dynamodb"], version = "^2.5.0.post2" }
 
 [build-system]
 requires = ["poetry>=0.12"]
