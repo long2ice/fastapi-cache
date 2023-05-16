@@ -78,7 +78,7 @@ async def index():
 
 @app.on_event("startup")
 async def startup():
-    redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
+    redis = aioredis.from_url("redis://localhost")
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
 ```
@@ -98,8 +98,46 @@ expire | int, states a caching time in seconds
 namespace | str, namespace to use to store certain cache items
 coder | which coder to use, e.g. JsonCoder
 key_builder | which key builder to use, default to builtin
+injected_dependency_namespace | prefix for injected dependency keywords, defaults to `__fastapi_cache`.
+cache_status_header | Name for the header on the response indicating if the request was served from cache; either `HIT` or `MISS`. Defaults to `X-FastAPI-Cache`.
 
 You can also use `cache` as decorator like other cache tools to cache common function result.
+
+### Injected Request and Response dependencies
+
+The `cache` decorator adds dependencies for the `Request` and `Response` objects, so that it can
+add cache control headers to the outgoing response, and return a 304 Not Modified response when
+the incoming request has a matching If-Non-Match header. This only happens if the decorated
+endpoint doesn't already list these objects directly.
+
+The keyword arguments for these extra dependencies are named
+`__fastapi_cache_request` and `__fastapi_cache_response` to minimize collisions.
+Use the `injected_dependency_namespace` argument to `@cache()` to change the
+prefix used if those names would clash anyway.
+
+
+### Supported data types
+
+When using the (default) `JsonCoder`, the cache can store any data type that FastAPI can convert to JSON, including Pydantic models and dataclasses,
+_provided_ that your endpoint has a correct return type annotation, unless
+the return type is a standard JSON-supported type such as a dictionary or a list.
+
+E.g. for an endpoint that returns a Pydantic model named `SomeModel`:
+
+```python
+from .models import SomeModel, create_some_model
+
+@app.get("/foo")
+@cache(expire=60)
+async def foo() -> SomeModel:
+    return create_some_model
+```
+
+It is not sufficient to configure a response model in the route decorator; the cache needs to know what the method itself returns.
+
+If no return type decorator is given, the primitive JSON type is returned instead.
+
+For broader type support, use the `fastapi_cache.coder.PickleCoder` or implement a custom coder (see below).
 
 ### Custom coder
 
@@ -121,7 +159,7 @@ take effect globally.
 ```python
 def my_key_builder(
         func,
-        namespace: Optional[str] = "",
+        namespace: str = "",
         request: Request = None,
         response: Response = None,
         *args,
@@ -142,6 +180,13 @@ async def index():
 
 `InMemoryBackend` store cache data in memory and use lazy delete, which mean if you don't access it after cached, it
 will not delete automatically.
+
+
+### RedisBackend
+
+When using the redis backend, please make sure you pass in a redis client that does [_not_ decode responses][redis-decode] (`decode_responses` **must** be `False`, which is the default). Cached data is stored as `bytes` (binary), decoding these i the redis client would break caching.
+
+[redis-decode]: https://redis-py.readthedocs.io/en/latest/examples/connection_examples.html#by-default-Redis-return-binary-responses,-to-decode-them-use-decode_responses=True
 
 ## Tests and coverage
 

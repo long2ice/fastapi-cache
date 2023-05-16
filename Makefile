@@ -5,7 +5,7 @@ up:
 	@poetry update
 
 deps:
-	@poetry install --no-root -E all
+	@poetry install --no-root --with=linting -E all
 
 style: deps
 	@isort -src $(checkfiles)
@@ -14,6 +14,8 @@ style: deps
 check: deps
 	@black $(checkfiles) || (echo "Please run 'make style' to auto-fix style issues" && false)
 	@flake8 $(checkfiles)
+	@mypy ${checkfiles}
+	@pyright ${checkfiles}
 
 test: deps
 	$(py_warn) pytest
@@ -23,5 +25,3 @@ build: clean deps
 
 clean:
 	@rm -rf ./dist
-
-ci: check test

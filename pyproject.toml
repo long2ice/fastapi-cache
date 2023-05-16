@@ -22,13 +22,22 @@ redis = { version = "^4.2.0rc1", optional = true }
 aiomcache = { version = "*", optional = true }
 pendulum = "*"
 aiobotocore = { version = "^1.4.1", optional = true }
-typing-extensions = { version = ">=4.1.0", markers = "python_version < \"3.10\"" }
+typing-extensions = { version = ">=4.1.0" }
 aiohttp = { version = ">=3.8.3", markers = "python_version >= \"3.11\"" }
 
+[tool.poetry.group.linting]
+optional = true
+
+[tool.poetry.group.linting.dependencies]
+flake8 = { version = "*", markers = "python_version >= \"3.10\"" }
+isort = { version = "*", markers = "python_version >= \"3.10\"" }
+black = { version = "*", markers = "python_version >= \"3.10\"" }
+mypy = { version = "^1.2.0", markers = "python_version >= \"3.10\"" }
+pyright = { version = "^1.1.306", markers="python_version >= \"3.10\"" }
+types-aiobotocore = { extras = ["dynamodb"], version = "^2.5.0.post2", markers = "python_version >= \"3.10\"" }
+types-redis = { version = "^4.5.4.2", markers = "python_version >= \"3.10\"" }
+
 [tool.poetry.group.dev.dependencies]
-flake8 = "*"
-isort = "*"
-black = "*"
 pytest = "*"
 requests = "*"
 coverage = "^6.5.0"
@@ -47,3 +56,31 @@ all = ["redis", "aiomcache", "aiobotocore"]
 [tool.black]
 line-length = 100
 target-version = ['py36', 'py37', 'py38', 'py39']
+
+[tool.mypy]
+files = ["fastapi_cache", "examples", "tests"]
+python_version = "3.7"
+# equivalent of --strict
+warn_unused_configs = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+no_implicit_reexport = true
+strict_equality = true
+strict_concatenate = true
+
+[[tool.mypy.overrides]]
+module = "examples.*.main"
+ignore_errors = true
+
+[tool.pyright]
+include = ["fastapi_cache", "tests", "examples"]
+strict = ["fastapi_cache", "tests"]
+pythonVersion = "3.7"

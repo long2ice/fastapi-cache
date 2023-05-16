@@ -1,10 +1,15 @@
 import datetime
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from aiobotocore.client import AioBaseClient
-from aiobotocore.session import get_session
+from aiobotocore.session import AioSession, get_session
 
-from fastapi_cache.backends import Backend
+from fastapi_cache.types import Backend
+
+if TYPE_CHECKING:
+    from types_aiobotocore_dynamodb import DynamoDBClient
+else:
+    DynamoDBClient = AioBaseClient
 
 
 class DynamoBackend(Backend):
@@ -25,25 +30,29 @@ class DynamoBackend(Backend):
         >> FastAPICache.init(dynamodb)
     """
 
+    client: DynamoDBClient
+    session: AioSession
+    table_name: str
+    region: Optional[str]
+
     def __init__(self, table_name: str, region: Optional[str] = None) -> None:
-        self.session = get_session()
-        self.client: Optional[AioBaseClient] = None  # Needs async init
+        self.session: AioSession = get_session()
         self.table_name = table_name
         self.region = region
 
     async def init(self) -> None:
-        self.client = await self.session.create_client(
+        self.client = await self.session.create_client(  # pyright: ignore[reportUnknownMemberType]
             "dynamodb", region_name=self.region
         ).__aenter__()
 
     async def close(self) -> None:
         self.client = await self.client.__aexit__(None, None, None)
 
-    async def get_with_ttl(self, key: str) -> Tuple[int, str]:
+    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
         response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
 
         if "Item" in response:
-            value = response["Item"].get("value", {}).get("S")
+            value = response["Item"].get("value", {}).get("B")
             ttl = response["Item"].get("ttl", {}).get("N")
 
             if not ttl:
@@ -56,12 +65,13 @@ class DynamoBackend(Backend):
 
         return 0, None
 
-    async def get(self, key: str) -> str:
+    async def get(self, key: str) -> Optional[bytes]:
         response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
         if "Item" in response:
-            return response["Item"].get("value", {}).get("S")
+            return response["Item"].get("value", {}).get("B")
+        return None
 
-    async def set(self, key: str, value: str, expire: Optional[int] = None) -> None:
+    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         ttl = (
             {
                 "ttl": {
@@ -83,7 +93,7 @@ class DynamoBackend(Backend):
             Item={
                 **{
                     "key": {"S": key},
-                    "value": {"S": value},
+                    "value": {"B": value},
                 },
                 **ttl,
             },
