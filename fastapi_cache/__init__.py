@@ -59,12 +59,12 @@ class FastAPICache:
 
     @classmethod
     def get_backend(cls) -> Backend:
-        assert cls._backend, "You must call init first!"  # nosec: B101
+        assert cls._backend, "You must call init first!"  # noqa: S101
         return cls._backend
 
     @classmethod
     def get_prefix(cls) -> str:
-        assert cls._prefix is not None, "You must call init first!"  # nosec: B101
+        assert cls._prefix is not None, "You must call init first!"  # noqa: S101
         return cls._prefix
 
     @classmethod
@@ -73,17 +73,17 @@ class FastAPICache:
 
     @classmethod
     def get_coder(cls) -> Type[Coder]:
-        assert cls._coder, "You must call init first!"  # nosec: B101
+        assert cls._coder, "You must call init first!"  # noqa: S101
         return cls._coder
 
     @classmethod
     def get_key_builder(cls) -> KeyBuilder:
-        assert cls._key_builder, "You must call init first!"  # nosec: B101
+        assert cls._key_builder, "You must call init first!"  # noqa: S101
         return cls._key_builder
 
     @classmethod
     def get_cache_status_header(cls) -> str:
-        assert cls._cache_status_header, "You must call init first!"  # nosec: B101
+        assert cls._cache_status_header, "You must call init first!"  # noqa: S101
         return cls._cache_status_header
 
     @classmethod
@@ -92,6 +92,6 @@ class FastAPICache:
 
     @classmethod
     async def clear(cls, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
-        assert cls._backend and cls._prefix is not None, "You must call init first!"  # nosec: B101
+        assert cls._backend and cls._prefix is not None, "You must call init first!"  # noqa: S101
         namespace = cls._prefix + (":" + namespace if namespace else "")
         return await cls._backend.clear(namespace, key)
