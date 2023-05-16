@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Dependabot metadata
         id: dependabot-metadata
-        uses: dependabot/fetch-metadata@v1.4.0
+        uses: dependabot/fetch-metadata@v1
 
       - uses: actions/checkout@v3
       - name: Approve PR
@@ -20,8 +20,8 @@ jobs:
         #   dependency type is indirect, direct:development or direct:production
         #   version-update is semver-major, semver-minor or semver-patch
         if: |
-          steps.metadata.outputs.dependency-type != 'indirect'
-          && steps.metadata.outputs.update-type != 'version-update:semver-major'
+          steps.dependabot-metadata.outputs.dependency-type != 'indirect'
+          && steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major'
         run: |
           if [ "$(gh pr view "$PR_URL" --json reviewDecision -q .reviewDecision)" != "APPROVED" ]; then
             gh pr review --approve "$PR_URL"
