@@ -32,11 +32,7 @@ jobs:
       - name: Install linting requirements
         run: poetry install --no-root --with=linting --all-extras
       - name: Execute linters
-        run: |
-          poetry run black --check --diff .
-          poetry run flake8
-          poetry run mypy
-          poetry run pyright
+        run: make lint
 
   test:
     needs:
@@ -59,11 +55,10 @@ jobs:
           cache: poetry
       - name: Install testing requirements
         run: |
-          poetry install --no-root --with=dev --all-extras
+          poetry install --no-root --all-extras
+          poetry run pip install tox-gh-actions
       - name: Execute tests
-        env:
-          PYTHONDEVMODE: '1'
-        run: poetry run pytest
+        run: poetry run tox
 
   test-summary:
     name: Test matrix status
