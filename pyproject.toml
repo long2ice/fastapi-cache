@@ -81,12 +81,13 @@ addopts = "-p no:warnings"
 ignore = ["E501"]
 line-length = 80
 select = [
-    "B", # flake8-bugbear
-    "E", # pycodestyle errors
-    "F", # pyflakes
-    "I", # isort
-    "S", # flake8-bandit
-    "W", # pycodestyle warnings
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "S",  # flake8-bandit
+    "W",  # pycodestyle warnings
     "UP", # pyupgrade
 ]
 target-version = "py37"
