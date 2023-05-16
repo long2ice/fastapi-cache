@@ -30,7 +30,7 @@ jobs:
             ${{ runner.os }}-mypy-${{ steps.setup-python.outputs.python-version }}-
             ${{ runner.os }}-mypy-
       - name: Install linting requirements
-        run: poetry install --no-root --with=linting --all-extras
+        run: poetry install --no-root
       - name: Execute linters
         run: make lint
 
@@ -55,7 +55,7 @@ jobs:
           cache: poetry
       - name: Install testing requirements
         run: |
-          poetry install --no-root --all-extras
+          poetry install --no-root
           poetry run pip install tox-gh-actions
       - name: Execute tests
         run: poetry run tox
