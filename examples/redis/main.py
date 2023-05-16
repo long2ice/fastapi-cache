@@ -38,7 +38,7 @@ async def get_ret():
 @app.get("/")
 @cache(namespace="test", expire=10)
 async def index():
-    return dict(ret=await get_ret())
+    return {"ret": await get_ret()}
 
 
 @app.get("/clear")
@@ -58,7 +58,7 @@ async def get_data(request: Request, response: Response):
 @cache(namespace="test", expire=10)
 def blocking():
     time.sleep(2)
-    return dict(ret=42)
+    return {"ret": 42}
 
 
 @app.get("/datetime")

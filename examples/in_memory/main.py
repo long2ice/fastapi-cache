@@ -27,7 +27,7 @@ async def get_ret():
 @app.get("/")
 @cache(namespace="test", expire=10)
 async def index():
-    return dict(ret=await get_ret())
+    return {"ret": await get_ret()}
 
 
 @app.get("/clear")
