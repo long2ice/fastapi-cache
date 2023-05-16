@@ -11,7 +11,7 @@ from fastapi_cache.backends.inmemory import InMemoryBackend
 
 
 @pytest.fixture(autouse=True)
-def init_cache() -> Generator[Any, Any, None]:
+def _init_cache() -> Generator[Any, Any, None]:  # pyright: ignore[reportUnusedFunction]
     FastAPICache.init(InMemoryBackend())
     yield
     FastAPICache.reset()
