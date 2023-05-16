@@ -37,7 +37,7 @@ ruff = { version = "^0.0.267", python = "^3.10" }
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
 requests = "*"
-coverage = "^6.5.0"
+coverage = ">=6.5,<8.0"
 httpx = "*"
 tox = "^4.5.1"
 
