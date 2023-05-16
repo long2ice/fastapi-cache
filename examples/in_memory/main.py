@@ -4,13 +4,13 @@ from typing import Dict, Optional
 import pendulum
 import uvicorn
 from fastapi import FastAPI
+from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
-from pydantic import BaseModel
 
 app = FastAPI()
 
