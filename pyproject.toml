@@ -44,10 +44,6 @@ coverage = "^6.5.0"
 httpx = "*"
 tox = "^4.5.1"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.poetry.extras]
 redis = ["redis"]
 memcache = ["aiomcache"]
@@ -85,3 +81,7 @@ ignore_errors = true
 include = ["fastapi_cache", "tests", "examples"]
 strict = ["fastapi_cache", "tests"]
 pythonVersion = "3.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
