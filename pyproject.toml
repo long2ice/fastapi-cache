@@ -41,6 +41,12 @@ coverage = ">=6.5,<8.0"
 httpx = "*"
 tox = "^4.5.1"
 
+[tool.poetry.group.distributing]
+optional = true
+
+[tool.poetry.group.distributing.dependencies]
+twine = { version = "^4.0.2", python = "^3.10" }
+
 [tool.poetry.extras]
 redis = ["redis"]
 memcache = ["aiomcache"]
