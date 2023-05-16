@@ -1,0 +1,7 @@
+[tool.ruff]
+extend = "../pyproject.toml"
+ignore = ["S101"]
+
+[tool.ruff.isort]
+known-first-party = ["examples", "fastapi_cache"]
+
