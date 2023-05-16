@@ -2,7 +2,16 @@ import logging
 import sys
 from functools import wraps
 from inspect import Parameter, Signature, isawaitable, iscoroutinefunction
-from typing import Awaitable, Callable, List, Optional, Type, TypeVar, Union, cast
+from typing import (
+    Awaitable,
+    Callable,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
@@ -10,7 +19,10 @@ else:
     from typing_extensions import ParamSpec
 
 from fastapi.concurrency import run_in_threadpool
-from fastapi.dependencies.utils import get_typed_return_annotation, get_typed_signature
+from fastapi.dependencies.utils import (
+    get_typed_return_annotation,
+    get_typed_signature,
+)
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.status import HTTP_304_NOT_MODIFIED
@@ -37,15 +49,16 @@ def _augment_signature(signature: Signature, *extra: Parameter) -> Signature:
     return signature.replace(parameters=[*parameters, *extra, *variadic_keyword_params])
 
 
-def _locate_param(sig: Signature, dep: Parameter, to_inject: List[Parameter]) -> Parameter:
+def _locate_param(
+    sig: Signature, dep: Parameter, to_inject: List[Parameter]
+) -> Parameter:
     """Locate an existing parameter in the decorated endpoint
 
     If not found, returns the injectable parameter, and adds it to the to_inject list.
 
     """
     param = next(
-        (param for param in sig.parameters.values() if param.annotation is dep.annotation),
-        None,
+        (p for p in sig.parameters.values() if p.annotation is dep.annotation), None
     )
     if param is None:
         to_inject.append(dep)
@@ -99,7 +112,9 @@ def cache(
         kind=Parameter.KEYWORD_ONLY,
     )
 
-    def wrapper(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[Union[R, Response]]]:
+    def wrapper(
+        func: Callable[P, Awaitable[R]]
+    ) -> Callable[P, Awaitable[Union[R, Response]]]:
         # get_typed_signature ensures that any forward references are resolved first
         wrapped_signature = get_typed_signature(func)
         to_inject: List[Parameter] = []
@@ -162,7 +177,8 @@ def cache(
                 ttl, cached = await backend.get_with_ttl(cache_key)
             except Exception:
                 logger.warning(
-                    f"Error retrieving cache key '{cache_key}' from backend:", exc_info=True
+                    f"Error retrieving cache key '{cache_key}' from backend:",
+                    exc_info=True,
                 )
                 ttl, cached = 0, None
 
@@ -174,7 +190,8 @@ def cache(
                     await backend.set(cache_key, to_cache, expire)
                 except Exception:
                     logger.warning(
-                        f"Error setting cache key '{cache_key}' in backend:", exc_info=True
+                        f"Error setting cache key '{cache_key}' in backend:",
+                        exc_info=True,
                     )
 
                 if response:
@@ -206,7 +223,8 @@ def cache(
 
             return result
 
-        setattr(inner, "__signature__", _augment_signature(wrapped_signature, *to_inject))
+        inner.__signature__ = _augment_signature(wrapped_signature, *to_inject)  # type: ignore[attr-defined]
+
         return inner
 
     return wrapper

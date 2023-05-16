@@ -5,7 +5,6 @@ from starlette.requests import Request
 from starlette.responses import Response
 from typing_extensions import Protocol
 
-
 _Func = Callable[..., Any]
 
 
