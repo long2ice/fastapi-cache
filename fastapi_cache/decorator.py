@@ -171,7 +171,7 @@ def cache(
             )
             if isawaitable(cache_key):
                 cache_key = await cache_key
-            assert isinstance(cache_key, str)
+            assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
 
             try:
                 ttl, cached = await backend.get_with_ttl(cache_key)
