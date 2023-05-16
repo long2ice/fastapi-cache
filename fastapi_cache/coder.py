@@ -52,7 +52,7 @@ def object_hook(obj: Any) -> Any:
     if _spec_type in CONVERTERS:
         return CONVERTERS[_spec_type](obj["val"])
     else:
-        raise TypeError("Unknown {}".format(_spec_type))
+        raise TypeError(f"Unknown {_spec_type}")
 
 
 class Coder:

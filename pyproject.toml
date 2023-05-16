@@ -86,6 +86,7 @@ select = [
     "F", # pyflakes
     "I", # isort
     "W", # pycodestyle warnings
+    "UP", # pyupgrade
 ]
 target-version = "py37"
 
