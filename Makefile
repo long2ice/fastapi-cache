@@ -18,6 +18,7 @@ test-parallel: deps
 
 build: clean deps
 	@poetry build
+	@poetry run tox run -e lint_distributions
 
 clean:
 	@rm -rf ./dist
