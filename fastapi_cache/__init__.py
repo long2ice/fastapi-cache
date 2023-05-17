@@ -1,10 +1,19 @@
 from typing import ClassVar, Optional, Type
 
+# Because this project supports python 3.7 and up, Pyright treats importlib as
+# an external library and so needs to be told to ignore the type issues it sees.
+try:
+    # Python 3.8+
+    from importlib.metadata import version  # type: ignore
+except ImportError:
+    # Python 3.7
+    from importlib_metadata import version  # type: ignore
+
 from fastapi_cache.coder import Coder, JsonCoder
 from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import Backend, KeyBuilder
 
-__version__ = "0.2.1"
+__version__ = version("fastapi-cache2")  # pyright: ignore[reportUnknownVariableType]
 __all__ = [
     "Backend",
     "Coder",
@@ -92,7 +101,11 @@ class FastAPICache:
         return cls._enable
 
     @classmethod
-    async def clear(cls, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
-        assert cls._backend and cls._prefix is not None, "You must call init first!"  # noqa: S101
+    async def clear(
+        cls, namespace: Optional[str] = None, key: Optional[str] = None
+    ) -> int:
+        assert (  # noqa: S101
+            cls._backend and cls._prefix is not None
+        ), "You must call init first!"
         namespace = cls._prefix + (":" + namespace if namespace else "")
         return await cls._backend.clear(namespace, key)
