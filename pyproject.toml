@@ -40,6 +40,7 @@ requests = "*"
 coverage = ">=6.5,<8.0"
 httpx = "*"
 tox = "^4.5.1"
+towncrier = "^22.12.0"
 
 [tool.poetry.group.distributing]
 optional = true
@@ -75,6 +76,16 @@ strict_concatenate = true
 [[tool.mypy.overrides]]
 module = "examples.*.main"
 ignore_errors = true
+
+[tool.towncrier]
+directory = "changelog.d"
+filename = "CHANGELOG.md"
+package = "fastapi_cache"
+start_string = "<!-- towncrier release notes start -->\n"
+underlines = ["", "", ""]
+template = "changelog.d/changelog_template.jinja"
+title_format = "## [{version}](https://github.com/long2ice/fastapi-cache/tree/{version}) - {project_date}"
+issue_format = "[#{issue}](https://github.com/long2ice/fastapi-cache/issues/{issue})"
 
 [tool.pyright]
 strict = ["fastapi_cache", "tests"]
