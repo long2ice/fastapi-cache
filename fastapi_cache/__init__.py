@@ -4,6 +4,7 @@ from fastapi_cache.coder import Coder, JsonCoder
 from fastapi_cache.key_builder import default_key_builder
 from fastapi_cache.types import Backend, KeyBuilder
 
+__version__ = "0.2.1"
 __all__ = [
     "Backend",
     "Coder",
