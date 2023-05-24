@@ -66,13 +66,13 @@ def _locate_param(
     return param
 
 
-def _uncacheable(request: Optional[Request]) -> bool:
+def _uncacheable(request: Optional[Request], respect_headers: bool) -> bool:
     """Determine if this request should not be cached
 
     Returns true if:
     - Caching has been disabled globally
     - This is not a GET request
-    - The request has a Cache-Control header with a value of "no-store" or "no-cache"
+    - The request has a Cache-Control header with a value of "no-store" or "no-cache" (if respect_headers hasn't been overriden to False)
 
     """
     if not FastAPICache.get_enable():
@@ -81,7 +81,7 @@ def _uncacheable(request: Optional[Request]) -> bool:
         return False
     if request.method != "GET":
         return True
-    return request.headers.get("Cache-Control") in ("no-store", "no-cache")
+    return respect_headers and request.headers.get("Cache-Control") in ("no-store", "no-cache")
 
 
 def cache(
@@ -90,6 +90,7 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
+    respect_headers: bool = True,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -97,6 +98,7 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param respect_headers:
 
     :return:
     """
@@ -151,7 +153,7 @@ def cache(
             request: Optional[Request] = copy_kwargs.pop(request_param.name, None)  # type: ignore[assignment]
             response: Optional[Response] = copy_kwargs.pop(response_param.name, None)  # type: ignore[assignment]
 
-            if _uncacheable(request):
+            if _uncacheable(request, respect_headers):
                 return await ensure_async_func(*args, **kwargs)
 
             prefix = FastAPICache.get_prefix()
