@@ -1490,14 +1490,14 @@ testing = ["covdefaults (>=2.2.2)", "importlib-metadata (>=6)", "pytest (>=7.2.1
 
 [[package]]
 name = "pyright"
-version = "1.1.308"
+version = "1.1.309"
 description = "Command line wrapper for pyright"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyright-1.1.308-py3-none-any.whl", hash = "sha256:40a541d21000d256bbd076f4337fc93d4265a92c63f06e5bedf893d77afb234d"},
-    {file = "pyright-1.1.308.tar.gz", hash = "sha256:7858a32d08555f8894931e2dc9571126cdc417e78e096f5be13e9418d8aed1e9"},
+    {file = "pyright-1.1.309-py3-none-any.whl", hash = "sha256:a8b052c1997f7334e80074998ea0f93bd149550e8cf27ccb5481d3b2e1aad161"},
+    {file = "pyright-1.1.309.tar.gz", hash = "sha256:1abcfa83814d792a5d70b38621cc6489acfade94ebb2279e55ba1f394d54296c"},
 ]
 
 [package.dependencies]
