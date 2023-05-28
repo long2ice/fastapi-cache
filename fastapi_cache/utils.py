@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Dict, ForwardRef, Callable
+from typing import Any, Callable, Dict, ForwardRef
 
 from pydantic.typing import evaluate_forwardref
 
