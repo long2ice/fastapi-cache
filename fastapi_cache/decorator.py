@@ -19,10 +19,7 @@ else:
     from typing_extensions import ParamSpec
 
 from fastapi.concurrency import run_in_threadpool
-from fastapi.dependencies.utils import (
-    get_typed_return_annotation,
-    get_typed_signature,
-)
+from fastapi.dependencies.utils import get_typed_signature
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.status import HTTP_304_NOT_MODIFIED
@@ -30,6 +27,7 @@ from starlette.status import HTTP_304_NOT_MODIFIED
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
 from fastapi_cache.types import KeyBuilder
+from fastapi_cache.utils import get_typed_return_annotation
 
 logger: logging.Logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
