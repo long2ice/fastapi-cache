@@ -166,8 +166,8 @@ def cache(
                 f"{prefix}:{namespace}",
                 request=request,
                 response=response,
-                args=args,
-                kwargs=copy_kwargs,
+                args=coder.encode(args),
+                kwargs=coder.encode(copy_kwargs),
             )
             if isawaitable(cache_key):
                 cache_key = await cache_key
