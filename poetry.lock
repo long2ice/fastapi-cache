@@ -2,24 +2,24 @@
 
 [[package]]
 name = "aiobotocore"
-version = "2.5.0"
+version = "2.5.1"
 description = "Async client for aws services using botocore and aiohttp"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "aiobotocore-2.5.0-py3-none-any.whl", hash = "sha256:9a2a022d7b78ec9a2af0de589916d2721cddbf96264401b78d7a73c1a1435f3b"},
-    {file = "aiobotocore-2.5.0.tar.gz", hash = "sha256:6a5b397cddd4f81026aa91a14c7dd2650727425740a5af8ba75127ff663faf67"},
+    {file = "aiobotocore-2.5.1-py3-none-any.whl", hash = "sha256:3dce68cfdb351f3a6922ad2f3b6274146b7d43a59d6ed24e5185788e67b35f02"},
+    {file = "aiobotocore-2.5.1.tar.gz", hash = "sha256:1106ed649a1f8980dcae503c69ff5dc9aa51f72d4e270724954c9add6dd4f234"},
 ]
 
 [package.dependencies]
-aiohttp = ">=3.3.1"
-aioitertools = ">=0.5.1"
-botocore = ">=1.29.76,<1.29.77"
-wrapt = ">=1.10.10"
+aiohttp = ">=3.3.1,<4.0.0"
+aioitertools = ">=0.5.1,<1.0.0"
+botocore = ">=1.29.161,<1.29.162"
+wrapt = ">=1.10.10,<2.0.0"
 
 [package.extras]
-awscli = ["awscli (>=1.27.76,<1.27.77)"]
-boto3 = ["boto3 (>=1.26.76,<1.26.77)"]
+awscli = ["awscli (>=1.27.161,<1.27.162)"]
+boto3 = ["boto3 (>=1.26.161,<1.26.162)"]
 
 [[package]]
 name = "aiohttp"
@@ -260,13 +260,13 @@ css = ["tinycss2 (>=1.1.0,<1.2)"]
 
 [[package]]
 name = "botocore"
-version = "1.29.76"
+version = "1.29.161"
 description = "Low-level, data-driven core of boto 3."
 optional = true
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.29.76-py3-none-any.whl", hash = "sha256:70735b00cd529f152992231ca6757e458e5ec25db43767b3526e9a35b2f143b7"},
-    {file = "botocore-1.29.76.tar.gz", hash = "sha256:c2f67b6b3f8acf2968eafca06526f07b9fb0d27bac4c68a635d51abb675134a7"},
+    {file = "botocore-1.29.161-py3-none-any.whl", hash = "sha256:b906999dd53dda2ef0ef6f7f55fcc81a4b06b9f1c8a9f65c546e0b981f959f5f"},
+    {file = "botocore-1.29.161.tar.gz", hash = "sha256:a50edd715eb510343e27849f36483804aae4b871590db4d4996aa53368dcac40"},
 ]
 
 [package.dependencies]
