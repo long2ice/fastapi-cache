@@ -91,7 +91,7 @@ def cache(
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
 ) -> Callable[
-    [Callable[P, Union[R,Awaitable[R]]]],
+    [Callable[P, Union[R, Awaitable[R]]]],
     Callable[P, Awaitable[Union[R, Response]]]
 ]:
     """
