@@ -29,7 +29,7 @@ class RedisBackend(Backend):
                 cursor, keys = await self.redis.scan(cursor, match=f'{namespace}:*', count=500)
                 removed += await self.redis.delete(*keys)
                 if cursor == 0:
-                    return removed
+                    return removed  # type: ignore[union-attr,no-any-return]
         elif key:
-            return await self.redis.delete(key)
+            return await self.redis.delete(key)  # type: ignore[union-attr]
         return 0
