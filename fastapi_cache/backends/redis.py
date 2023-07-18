@@ -26,10 +26,10 @@ class RedisBackend(Backend):
             cursor = 0
             removed = 0
             while True:
-                cursor, keys = await self.redis.scan(cursor, match=f'{namespace}:*', count=500)
-                removed += await self.redis.delete(*keys)
+                cursor, keys = await self.redis.scan(cursor, f'{namespace}:*', 500)  # type: ignore[union-attr]
+                removed += await self.redis.delete(*keys)  # type: ignore[union-attr]
                 if cursor == 0:
-                    return removed  # type: ignore[union-attr,no-any-return]
+                    return removed
         elif key:
             return await self.redis.delete(key)  # type: ignore[union-attr]
         return 0
