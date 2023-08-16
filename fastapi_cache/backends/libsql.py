@@ -1,3 +1,4 @@
+import codecs
 import time
 from typing import Any, Optional, Tuple
 
@@ -11,6 +12,21 @@ EmptyResultSet = ResultSet(
     rows=[],
     rows_affected=0,
     last_insert_rowid=0)
+
+# see https://gist.github.com/jeremyBanks/1083518
+def quote_identifier(s:str, errors:str ="strict") -> str:
+    encodable = s.encode("utf-8", errors).decode("utf-8")
+
+    nul_index = encodable.find("\x00")
+
+    if nul_index >= 0:
+        error = UnicodeEncodeError("utf-8", encodable, nul_index, nul_index + 1, "NUL not allowed")
+        error_handler = codecs.lookup_error(errors)
+        replacement, _ = error_handler(error)
+        encodable = encodable.replace("\x00", replacement) # type: ignore
+
+    return "\"" + encodable.replace("\"", "\"\"") + "\""
+
 
 class LibsqlBackend(Backend):
     """
@@ -34,8 +50,7 @@ class LibsqlBackend(Backend):
 
     def __init__(self, libsql_url: str, table_name: str):
         self.libsql_url = libsql_url
-        #TODO: scrub table name for SQL injection. sqlite doesn't accept parameters for table names
-        self.table_name = table_name
+        self.table_name = quote_identifier(table_name)
 
     @property
     def now(self) -> int:
