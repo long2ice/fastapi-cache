@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import libsql_client
 from libsql_client import ResultSet
@@ -8,17 +8,17 @@ from fastapi_cache.types import Backend
 
 EmptyResultSet = ResultSet(
     columns=(),
-    rows=[], 
-    rows_affected=0, 
+    rows=[],
+    rows_affected=0,
     last_insert_rowid=0)
 
 class LibsqlBackend(Backend):
     """
     libsql backend provider
 
-    This backend requires a table name to be passed during initialization. The table 
+    This backend requires a table name to be passed during initialization. The table
     will be created if it does not exist. If the table does exists, it will be emptied during init
-    
+
     Note that this backend does not fully support TTL. It will only delete outdated objects on get.
 
     Usage:
@@ -34,42 +34,42 @@ class LibsqlBackend(Backend):
 
     def __init__(self, libsql_url: str, table_name: str):
         self.libsql_url = libsql_url
-        self.table_name = table_name 
+        #TODO: scrub table name for SQL injection. sqlite doesn't accept parameters for table names
+        self.table_name = table_name
 
     @property
     def now(self) -> int:
         return int(time.time())
-    
-    async def _make_request(self, request: str) -> ResultSet:
+
+    async def _make_request(self, request: str, params: Any = None) -> ResultSet:
         # TODO: Exception handling. Return EmptyResultSet on error?
         async with libsql_client.create_client(self.libsql_url) as client:
-            return await client.execute(request)
+            return await client.execute(request, params)
 
 
     async def create_and_flush(self) -> None:
-        await self._make_request("CREATE TABLE IF NOT EXISTS `{}` "
-                                "(key STRING PRIMARY KEY, value BLOB, expire INTEGER);"
-                                .format(self.table_name))
-        await self._make_request("DELETE FROM `{}`;".format(self.table_name))
+        await self._make_request(f"CREATE TABLE IF NOT EXISTS `{self.table_name}` "
+                                "(key STRING PRIMARY KEY, value BLOB , expire INTEGER)") # noqa: S608
+        await self._make_request(f"DELETE FROM `{self.table_name}`") # noqa: S608
 
         return None
 
     async def _get(self, key: str) -> Tuple[int, Optional[bytes]]:
-        result_set = await self._make_request("SELECT * from `{}` WHERE key = \"{}\""
-                                              .format(self.table_name,key))
+        result_set = await self._make_request(f"SELECT * from `{self.table_name}` WHERE key = \"?\"", # noqa: S608
+                                              [key])
         if len(result_set.rows) == 0:
             return (0,None)
-        
+
         value = result_set.rows[0]["value"]
         ttl_ts = result_set.rows[0]["expire"]
-        
+
         if not value:
             return (0,None)
         if ttl_ts < self.now:
-            await self._make_request("DELETE FROM `{}` WHERE key = \"{}\""
-                                     .format(self.table_name, key))
+            await self._make_request(f"DELETE FROM `{self.table_name}` WHERE key = \"?\"", # noqa: S608
+                                     [key])
             return (0, None)
-        
+
         return(ttl_ts, value)  # type: ignore[union-attr,no-any-return]
 
     async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
@@ -81,19 +81,19 @@ class LibsqlBackend(Backend):
 
     async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         ttl = self.now + expire if expire else 0
-        await self._make_request("INSERT OR REPLACE INTO `{}`(\"key\", \"value\", \"expire\") " 
-                                 "VALUES('{}','{}',{});"
-                                 .format(self.table_name, key, value.decode("utf-8"), ttl))
+        await self._make_request(f"INSERT OR REPLACE INTO `{self.table_name}`(\"key\", \"value\", \"expire\") "
+                                 "VALUES('?','?',?)", # noqa: S608
+                                 [key, value.decode("utf-8"), ttl])
         return None
 
     async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
 
         if namespace:
-            result_set = await self._make_request("DELETE FROM `{}` WHERE key = \"{}%\""
-                                                  .format(self.table_name, namespace))
+            result_set = await self._make_request(f"DELETE FROM `{self.table_name}` WHERE key = \"?%\"", # noqa: S608
+                                                  [namespace])
             return result_set.rowcount # type: ignore
         elif key:
-            result_set = await self._make_request("DELETE FROM `{}` WHERE key = \"{}\""
-                                                  .format(self.table_name, key))
+            result_set = await self._make_request(f"DELETE FROM `{self.table_name}` WHERE key = \"?\"", # noqa: S608
+                                                  [key])
             return result_set.rowcount # type: ignore
         return 0
