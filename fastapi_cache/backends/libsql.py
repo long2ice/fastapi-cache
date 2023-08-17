@@ -63,14 +63,14 @@ class LibsqlBackend(Backend):
 
 
     async def create_and_flush(self) -> None:
-        await self._make_request(f"CREATE TABLE IF NOT EXISTS `{self.table_name}` "
+        await self._make_request(f"CREATE TABLE IF NOT EXISTS {self.table_name} "
                                 "(key STRING PRIMARY KEY, value BLOB , expire INTEGER)") # noqa: S608
-        await self._make_request(f"DELETE FROM `{self.table_name}`") # noqa: S608
+        await self._make_request(f"DELETE FROM {self.table_name}") # noqa: S608
 
         return None
 
     async def _get(self, key: str) -> Tuple[int, Optional[bytes]]:
-        result_set = await self._make_request(f"SELECT * from `{self.table_name}` WHERE key = \"?\"", # noqa: S608
+        result_set = await self._make_request(f"SELECT * from {self.table_name} WHERE key = ?", # noqa: S608
                                               [key])
         if len(result_set.rows) == 0:
             return (0,None)
@@ -81,7 +81,7 @@ class LibsqlBackend(Backend):
         if not value:
             return (0,None)
         if ttl_ts < self.now:
-            await self._make_request(f"DELETE FROM `{self.table_name}` WHERE key = \"?\"", # noqa: S608
+            await self._make_request(f"DELETE FROM {self.table_name} WHERE key = ?", # noqa: S608
                                      [key])
             return (0, None)
 
@@ -96,19 +96,19 @@ class LibsqlBackend(Backend):
 
     async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
         ttl = self.now + expire if expire else 0
-        await self._make_request(f"INSERT OR REPLACE INTO `{self.table_name}`(\"key\", \"value\", \"expire\") "
-                                 "VALUES('?','?',?)", # noqa: S608
-                                 [key, value.decode("utf-8"), ttl])
+        await self._make_request(f"INSERT OR REPLACE INTO {self.table_name}(\"key\", \"value\", \"expire\") "
+                                 "VALUES(?,?,?)", # noqa: S608
+                                 [key, value, ttl])
         return None
 
     async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
 
         if namespace:
-            result_set = await self._make_request(f"DELETE FROM `{self.table_name}` WHERE key = \"?%\"", # noqa: S608
-                                                  [namespace])
+            result_set = await self._make_request(f"DELETE FROM {self.table_name} WHERE key = ?", # noqa: S608
+                                                  [namespace + '%'])
             return result_set.rowcount # type: ignore
         elif key:
-            result_set = await self._make_request(f"DELETE FROM `{self.table_name}` WHERE key = \"?\"", # noqa: S608
+            result_set = await self._make_request(f"DELETE FROM {self.table_name} WHERE key = ?", # noqa: S608
                                                   [key])
             return result_set.rowcount # type: ignore
         return 0
