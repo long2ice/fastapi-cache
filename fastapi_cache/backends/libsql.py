@@ -106,9 +106,9 @@ class LibsqlBackend(Backend):
         if namespace:
             result_set = await self._make_request(f"DELETE FROM {self.table_name} WHERE key = ?", # noqa: S608
                                                   [namespace + '%'])
-            return result_set.rowcount # type: ignore
+            return result_set.rows_affected # type: ignore
         elif key:
             result_set = await self._make_request(f"DELETE FROM {self.table_name} WHERE key = ?", # noqa: S608
                                                   [key])
-            return result_set.rowcount # type: ignore
+            return result_set.rows_affected # type: ignore
         return 0
