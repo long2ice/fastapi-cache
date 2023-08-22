@@ -131,7 +131,7 @@ from .models import SomeModel, create_some_model
 @app.get("/foo")
 @cache(expire=60)
 async def foo() -> SomeModel:
-    return create_some_model
+    return create_some_model()
 ```
 
 It is not sufficient to configure a response model in the route decorator; the cache needs to know what the method itself returns. If no return type decorator is given, the primitive JSON type is returned instead.
