@@ -33,7 +33,7 @@ mypy = { version = "^1.2.0", python = "^3.10" }
 pyright = { version = "^1.1.306", python = "^3.10" }
 types-aiobotocore = { extras = ["dynamodb"], version = "^2.5.0.post2", python = "^3.10" }
 types-redis = { version = "^4.5.4.2", python = "^3.10" }
-ruff = { version = ">=0.0.267,<0.0.286", python = "^3.10" }
+ruff = { version = ">=0.0.267,<0.0.287", python = "^3.10" }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
