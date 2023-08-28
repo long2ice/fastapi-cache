@@ -2,17 +2,17 @@
 
 [[package]]
 name = "aiobotocore"
-version = "2.5.4"
+version = "2.6.0"
 description = "Async client for aws services using botocore and aiohttp"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "aiobotocore-2.5.4-py3-none-any.whl", hash = "sha256:4b32218728ca3d0be83835b604603a0cd6c329066e884bb78149334267f92440"},
-    {file = "aiobotocore-2.5.4.tar.gz", hash = "sha256:60341f19eda77e41e1ab11eef171b5a98b5dbdb90804f5334b6f90e560e31fae"},
+    {file = "aiobotocore-2.6.0-py3-none-any.whl", hash = "sha256:0186e6a843364748cdbbf76ee98e9337c44f71a4e694ad1b110d5c516fbce909"},
+    {file = "aiobotocore-2.6.0.tar.gz", hash = "sha256:4805d0140bdfa17bfc2d0ba1243c8cc4273e927201fca5cf2e497c0004a9fab7"},
 ]
 
 [package.dependencies]
-aiohttp = ">=3.3.1,<4.0.0"
+aiohttp = ">=3.7.4.post0,<4.0.0"
 aioitertools = ">=0.5.1,<1.0.0"
 botocore = ">=1.31.17,<1.31.18"
 wrapt = ">=1.10.10,<2.0.0"
