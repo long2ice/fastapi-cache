@@ -16,7 +16,7 @@ include = ["LICENSE", "README.md"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-fastapi = "*"
+fastapi = ">0.100.0"
 uvicorn = "*"
 redis = { version = "^4.2.0rc1", optional = true }
 aiomcache = { version = "*", optional = true }
