@@ -2224,13 +2224,13 @@ cryptography = ">=35.0.0"
 
 [[package]]
 name = "types-redis"
-version = "4.6.0.7"
+version = "4.6.0.10"
 description = "Typing stubs for redis"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "types-redis-4.6.0.7.tar.gz", hash = "sha256:28c4153ddb5c9d4f10def44a2454673c361d2d5fc3cd867cf3bb1520f3f59a38"},
-    {file = "types_redis-4.6.0.7-py3-none-any.whl", hash = "sha256:05b1bf92879b25df20433fa1af07784a0d7928c616dc2ebf9087618db77ccbd0"},
+    {file = "types-redis-4.6.0.10.tar.gz", hash = "sha256:aa7fb5f743534500f274ddf11ab1c910aae1020481865a36b799e1d67de2aaf3"},
+    {file = "types_redis-4.6.0.10-py3-none-any.whl", hash = "sha256:00f003da884ec3d1d54633186b4cbd587b39782595c5603330cc46a51f9bcf6e"},
 ]
 
 [package.dependencies]
