@@ -170,9 +170,12 @@ def cache(
             except Exception:
                 logger.warning(f"Error setting cache key '{cache_key}' in backend:", exc_info=True)
 
-            response.headers["Cache-Control"] = f"max-age={expire}"
-            etag = f"W/{hash(encoded_ret)}"
-            response.headers["ETag"] = etag
+            if response is not None:
+                # if called outside a Request/Response context, these headers
+                # aren't needed anyway
+                response.headers["Cache-Control"] = f"max-age={expire}"
+                etag = f"W/{hash(encoded_ret)}"
+                response.headers["ETag"] = etag
             return ret
 
         return inner
