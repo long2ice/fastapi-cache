@@ -15,11 +15,21 @@ from typing import (
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseConfig, ValidationError, fields
+from pydantic import BaseConfig, ValidationError
 from starlette.responses import JSONResponse
 from starlette.templating import (
     _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
 )
+
+from pydantic.version import VERSION as PYDANTIC_VERSION
+
+PYDANTIC_V2 = PYDANTIC_VERSION.startswith("2.")
+
+if PYDANTIC_V2:
+    from fastapi._compat import ModelField
+else:
+    from pydantic.fields import ModelField
+
 
 _T = TypeVar("_T", bound=type)
 
@@ -69,7 +79,7 @@ class Coder:
     # decode_as_type method and then stores a different kind of field for a
     # given type, do make sure that the subclass provides its own class
     # attribute for this cache.
-    _type_field_cache: ClassVar[Dict[Any, fields.ModelField]] = {}
+    _type_field_cache: ClassVar[Dict[Any, ModelField]] = {}
 
     @overload
     @classmethod
@@ -93,7 +103,7 @@ class Coder:
             try:
                 field = cls._type_field_cache[type_]
             except KeyError:
-                field = cls._type_field_cache[type_] = fields.ModelField(
+                field = cls._type_field_cache[type_] = ModelField(
                     name="body", type_=type_, class_validators=None, model_config=BaseConfig
                 )
             result, errors = field.validate(result, {}, loc=())
