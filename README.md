@@ -173,7 +173,7 @@ async def index():
 
 By default the `default_key_builder` builtin key builder is used; this creates a
 cache key from the function module and name, and the positional and keyword
-arguments converted to their `repr()` representations, encoded as a MD5 hash.
+arguments converted to their `repr()` representations, encoded as a BLAKE2 hash.
 You can provide your own by passing a key builder in to `@cache()`, or to
 `FastAPICache.init()` to apply globally.
 
