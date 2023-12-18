@@ -181,13 +181,13 @@ For example, if you wanted to use the request method, URL and query string as a 
 
 ```python
 def request_key_builder(
-    func,
+    func: Callable[..., Any],
     namespace: str = "",
     *,
-    request: Request = None,
-    response: Response = None,
-    *args,
-    **kwargs,
+    request: Optional[Request] = None,
+    response: Optional[Response] = None,
+    args: Tuple[Any, ...],
+    kwargs: Dict[str, Any],
 ):
     return ":".join([
         namespace,
