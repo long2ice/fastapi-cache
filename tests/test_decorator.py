@@ -112,3 +112,41 @@ def test_alternate_injected_namespace() -> None:
         response = client.get("/namespaced_injection")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         assert response.json() == {"__fastapi_cache_request": 42, "__fastapi_cache_response": 17}
+
+def test_cache_control_header() -> None:
+    """Test no-cache, no-store cache control header"""
+    with TestClient(app) as client:
+        # forcing clear to start a clean cache
+        client.get("/clear")
+        
+        # no-store, no-cache will always no use or store cache
+        response = client.get("/date", headers={"Cache-Control": "no-store,no-cache"})
+        assert response.headers.get("X-FastAPI-Cache") == "MISS"
+        assert response.headers.get("Cache-Control") == "no-cache,no-store"
+        assert response.headers.get("ETag") is None
+        assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]
+
+        # do it again to test cache without header
+        response = client.get("/date")
+        assert response.headers.get("X-FastAPI-Cache") == "MISS"
+        assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]
+
+        # do it again to test cache with no-store. Will not store this response but use the cache
+        response = client.get("/date", headers={"Cache-Control": "no-store"})
+        assert response.headers.get("X-FastAPI-Cache") == "HIT"
+        assert response.headers.get("Cache-Control") == "max-age=10,no-store"
+        assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]
+        
+        # do it again to test cache with no-cache. Will not store use cache but store it
+        response = client.get("/date", headers={"Cache-Control": "no-cache"})
+        assert response.headers.get("X-FastAPI-Cache") == "MISS"
+        assert response.headers.get("Cache-Control") == "max-age=10,no-cache"
+        assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]
+
+        time.sleep(3)
+
+        # call with no headers now to use the value store in previous step
+        response = client.get("/date")
+        assert response.headers.get("X-FastAPI-Cache") == "HIT"
+        assert response.headers.get("Cache-Control") == "max-age=7"
+        assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]

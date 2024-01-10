@@ -11,6 +11,7 @@ from typing import (
     TypeVar,
     Union,
     cast,
+    Set,
 )
 
 if sys.version_info >= (3, 10):
@@ -72,7 +73,6 @@ def _uncacheable(request: Optional[Request]) -> bool:
     Returns true if:
     - Caching has been disabled globally
     - This is not a GET request
-    - The request has a Cache-Control header with a value of "no-store" or "no-cache"
 
     """
     if not FastAPICache.get_enable():
@@ -81,7 +81,23 @@ def _uncacheable(request: Optional[Request]) -> bool:
         return False
     if request.method != "GET":
         return True
-    return request.headers.get("Cache-Control") in ("no-store", "no-cache")
+    return False
+
+def _extract_cache_control_headers(request: Optional[Request]) -> Set[str]:
+    """Extracts Cache-Control header
+    1. Convert all header to lowercase to make it case insensitive
+    2. Split on comma (,)
+    3. Strip whitespaces
+    4. convert to all lower case
+
+    returns an empty set if header not set
+    """
+    if request is not None:
+        headers = {header_key.lower(): header_val for header_key, header_val in request.headers.items()}
+        cache_control_header = headers.get("cache-control", None)
+        if cache_control_header:
+            return set([cache_control_val.strip().lower() for cache_control_val in cache_control_header.split(",")])
+    return set()
 
 
 def cache(
@@ -160,6 +176,8 @@ def cache(
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
+            cache_control_headers = _extract_cache_control_headers(request=request)
+            response_headers = {"Cache-Control": cache_control_headers.copy()}
 
             cache_key = key_builder(
                 func,
@@ -173,21 +191,30 @@ def cache(
                 cache_key = await cache_key
             assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
 
+            ttl, cached = 0, None
             try:
-                ttl, cached = await backend.get_with_ttl(cache_key)
+                # no-cache: Assume cache is not present. i.e. treat it as a miss
+                if "no-cache" not in cache_control_headers:
+                    ttl, cached = await backend.get_with_ttl(cache_key)
+                    etag = f"W/{hash(cached)}"
+                    response_headers["Cache-Control"].add(f"max-age={ttl}")
+                    response_headers["Etag"] = {f"ETag={etag}"}
             except Exception:
                 logger.warning(
                     f"Error retrieving cache key '{cache_key}' from backend:",
                     exc_info=True,
                 )
-                ttl, cached = 0, None
 
             if cached is None:  # cache miss
                 result = await ensure_async_func(*args, **kwargs)
                 to_cache = coder.encode(result)
 
                 try:
-                    await backend.set(cache_key, to_cache, expire)
+                    # no-store: do not store the value in cache
+                    if "no-store" not in cache_control_headers:
+                        await backend.set(cache_key, to_cache, expire)
+                        response_headers["Cache-Control"].add(f"max-age={expire}")
+                        response_headers["Etag"] = {f"W/{hash(to_cache)}"}
                 except Exception:
                     logger.warning(
                         f"Error setting cache key '{cache_key}' in backend:",
@@ -197,25 +224,22 @@ def cache(
                 if response:
                     response.headers.update(
                         {
-                            "Cache-Control": f"max-age={expire}",
-                            "ETag": f"W/{hash(to_cache)}",
+                            **{header_key: ",".join(sorted(header_val)) for header_key, header_val in response_headers.items()},
                             cache_status_header: "MISS",
                         }
                     )
 
             else:  # cache hit
                 if response:
-                    etag = f"W/{hash(cached)}"
                     response.headers.update(
                         {
-                            "Cache-Control": f"max-age={ttl}",
-                            "ETag": etag,
+                            **{header_key: ",".join(sorted(header_val)) for header_key, header_val in response_headers.items()},
                             cache_status_header: "HIT",
                         }
                     )
 
                     if_none_match = request and request.headers.get("if-none-match")
-                    if if_none_match == etag:
+                    if "Etag" in response_headers and if_none_match == response_headers["Etag"]:
                         response.status_code = HTTP_304_NOT_MODIFIED
                         return response
 
