@@ -24,7 +24,7 @@ jobs:
           python-version: '3.x'
           cache: poetry
       - name: Cache mypy cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .mypy_cache
           key: ${{ runner.os }}-mypy-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
