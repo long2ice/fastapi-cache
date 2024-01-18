@@ -98,6 +98,7 @@ expire | int, states a caching time in seconds
 namespace | str, namespace to use to store certain cache items
 coder | which coder to use, e.g. JsonCoder
 key_builder | which key builder to use, default to builtin
+allow_client_caching | the `response` should allow the caller to cache (default to False)
 
 You can also use `cache` as decorator like other cache tools to cache common function result.
 
@@ -143,6 +144,10 @@ async def index():
 `InMemoryBackend` store cache data in memory and use lazy delete, which mean if you don't access it after cached, it
 will not delete automatically.
 
+### No-Store-Response
+For certain content, we want to handle all caching at the server (e.g. so we can do automatic invalidation) so
+this flag instructs the client (i.e. Browser/app) not to do any local caching
+
 ## Headers
 
 ### Cache-Control (Request)
@@ -160,7 +165,12 @@ If the `if-none-match` header is set on the request, then FastAPI-Cache will ret
 response if a cached result is found and its `ETag` value matches the `ETag` header.
 
 ### Cache-Control (Response)
-The `Cache-Control: max-age=SSSS` header will be returned if the result can be cached by the caller
+Because we want to handle cache invalidation with server-side logic, by default the response will
+return `Cache-Control: no-store` indicating that the client should always check the server for fresh
+results.
+
+If 'allow_client_caching' is set, the `Cache-Control: max-age=####` header will be returned instead.
+
 
 ### X-Cache-Hit (Response)
 FastAPI-Cache will return a `X-Cache-Hit: True` header if the response is served from the cache

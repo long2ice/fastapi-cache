@@ -76,7 +76,7 @@ def test_kwargs() -> None:
         assert response.json() == {"name": name}
 
 
-def test_cache_control_nostore() -> None:
+def test_cache_control_no_store() -> None:
     with TestClient(app) as client:
         # Cache-Control: no-store should return a fresh result that is not stored,
         # so two hits within the cache TTL should be different, and then
@@ -101,7 +101,7 @@ def test_cache_control_nostore() -> None:
         assert response.headers.get("X-Cache-Hit") != "True"
 
 
-def test_cache_control_nocache() -> None:
+def test_cache_control_no_cache() -> None:
     with TestClient(app) as client:
         # Cache-Control: no-cache should force a fresh result to be returned
         # AND stored
@@ -141,3 +141,14 @@ def test_cache_control_etag() -> None:
         etag = "foo"
         response = client.get("/datetime", headers={"if-none-match": etag})
         assert response.status_code == 200
+
+
+def test_client_caching() -> None:
+    with TestClient(app) as client:
+        # Cache-Control: no-store should be returned from this endpoint
+        response = client.get("/client-side-cacheable")
+        assert response.headers.get("cache-control") != "no-store"
+        assert "max-age" in response.headers.get("cache-control")
+
+        response = client.get("/datetime")
+        assert response.headers.get("cache-control") == "no-store"

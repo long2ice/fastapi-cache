@@ -28,6 +28,7 @@ def cache(
     coder: Optional[Type[Coder]] = None,
     key_builder: Optional[Callable[..., Any]] = None,
     namespace: Optional[str] = "",
+    allow_client_caching: Optional[bool] = False,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     cache all function
@@ -35,6 +36,7 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param allow_client_caching:
 
     :return:
     """
@@ -82,6 +84,7 @@ def cache(
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
+            nonlocal allow_client_caching
 
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
@@ -196,6 +199,13 @@ def cache(
                 else:
                     response.headers["Cache-Control"] = f"max-age={expire}"
                     response.headers["ETag"] = f"W/{hash(coder.encode(ret))}"
+
+                # For certain content, we want to handle all caching at the
+                # server (e.g. so we can do automatic invalidation) so
+                # this flag instructs the client (i.e. Browser/app) not
+                # to do any local caching
+                if allow_client_caching == False:
+                    response.headers["Cache-Control"] = "no-store"
 
                 return ret
 
