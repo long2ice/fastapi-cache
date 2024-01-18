@@ -144,9 +144,12 @@ async def index():
 `InMemoryBackend` store cache data in memory and use lazy delete, which mean if you don't access it after cached, it
 will not delete automatically.
 
-### No-Store-Response
-For certain content, we want to handle all caching at the server (e.g. so we can do automatic invalidation) so
-this flag instructs the client (i.e. Browser/app) not to do any local caching
+### Allow-Client-Caching
+For certain content, we want to handle all caching at the server (e.g. so we can do automatic
+invalidation, e.g. when the user profile changes so cached shortlists are no longer valid)
+so this flag instructs the client (i.e. Browser/app) not to do any local caching. If content is
+relatively stable, it can be overridden with the `allow_client_caching` parameter inside the `@cache()`
+decorator.
 
 ## Headers
 
