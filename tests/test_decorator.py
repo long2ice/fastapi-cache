@@ -1,5 +1,6 @@
 import time
 from typing import Generator
+import logging
 
 import pendulum
 import pytest
@@ -37,7 +38,6 @@ def test_datetime() -> None:
 def test_date() -> None:
     """Test path function without request or response arguments."""
     with TestClient(app) as client:
-
         response = client.get("/date")
         assert pendulum.parse(response.json()) == pendulum.today()
 
@@ -68,8 +68,76 @@ def test_cache_response_obj() -> None:
         assert get_cache_response.headers.get("cache-control")
         assert get_cache_response.headers.get("etag")
 
+
 def test_kwargs() -> None:
     with TestClient(app) as client:
         name = "Jon"
-        response = client.get("/kwargs", params = {"name": name})
+        response = client.get("/kwargs", params={"name": name})
         assert response.json() == {"name": name}
+
+
+def test_cache_control_nostore() -> None:
+    with TestClient(app) as client:
+        # Cache-Control: no-store should return a fresh result that is not stored,
+        # so two hits within the cache TTL should be different, and then
+        # removing the removing the header should also not have stored anything.
+
+        # First ensure the cache has expired
+        time.sleep(3)
+
+        response = client.get("/datetime", headers={"cache-control": "no-store"})
+        response_time_1 = response.json().get("now")
+        time.sleep(1)
+        response = client.get("/datetime", headers={"cache-control": "no-store"})
+        response_time_2 = response.json().get("now")
+        assert response_time_1 != response_time_2
+        response = client.get("/datetime")
+
+        # now even if we remove the header, we should still get a fresh
+        # result because nothing was stored
+        response_time_3 = response.json().get("now")
+        actual_time = pendulum.now().replace(microsecond=0)
+        assert pendulum.parse(response_time_3).replace(microsecond=0) == actual_time
+        assert response.headers.get("X-Cache-Hit") != "True"
+
+
+def test_cache_control_nocache() -> None:
+    with TestClient(app) as client:
+        # Cache-Control: no-cache should force a fresh result to be returned
+        # AND stored
+
+        response = client.get("/datetime")
+        cached_time = response.json().get("now")
+        time.sleep(1)
+        response = client.get("/datetime")
+        response_time = response.json().get("now")
+        assert response_time == cached_time
+        assert response.headers.get("X-Cache-Hit") == "True"
+
+        response = client.get("/datetime", headers={"cache-control": "no-cache"})
+        response_time = response.json().get("now")
+        assert response_time != cached_time
+        assert response.headers.get("X-Cache-Hit") != "True"
+        new_cache_time = response_time
+
+        time.sleep(1)
+        response = client.get("/datetime")
+        response_time = response.json().get("now")
+        assert response_time == new_cache_time
+        assert response.headers.get("X-Cache-Hit") == "True"
+
+
+def test_cache_control_etag() -> None:
+    with TestClient(app) as client:
+        # if-none-match is a header used for validating the cache exists;
+        # If present, a GET request should return 304 for a cache hit
+
+        response = client.get("/datetime")
+        etag = response.headers.get("etag")
+
+        response = client.get("/datetime", headers={"if-none-match": etag})
+        assert response.status_code == 304
+
+        etag = "foo"
+        response = client.get("/datetime", headers={"if-none-match": etag})
+        assert response.status_code == 200

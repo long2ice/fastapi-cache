@@ -1,4 +1,4 @@
-# fastapi-cache
+# fastapi-cache - fork for Playfully
 
 ![pypi](https://img.shields.io/pypi/v/fastapi-cache2.svg?style=flat)
 ![license](https://img.shields.io/github/license/long2ice/fastapi-cache)
@@ -142,6 +142,32 @@ async def index():
 
 `InMemoryBackend` store cache data in memory and use lazy delete, which mean if you don't access it after cached, it
 will not delete automatically.
+
+## Headers
+
+### Cache-Control (Request)
+The `Cache-Control` header can be used in a GET Request to control the behavior of the cache:
+
+* If `Cache-Control: no-store` is set on the request, then FastAPI-Cache will return a fresh result
+  and will not store that result. However, an existing cache will not be removed, so the next request
+  may still return the cached result.
+* If `Cache-Control: no-cache` is set on the request, then FastAPI-Cache will generate a fresh result
+  and will store that result (overwriting the cache if necessary)
+* These two headers are mutually exclusive
+
+### if-none-match (Request)
+If the `if-none-match` header is set on the request, then FastAPI-Cache will return an `HTTP_304: Not Modified`
+response if a cached result is found and its `ETag` value matches the `ETag` header.
+
+### Cache-Control (Response)
+The `Cache-Control: max-age=SSSS` header will be returned if the result can be cached by the caller
+
+### X-Cache-Hit (Response)
+FastAPI-Cache will return a `X-Cache-Hit: True` header if the response is served from the cache
+
+### ETag (Response)
+FastAPI-Cache will return an `ETag` header if the result can be cached by the caller
+
 
 ## Tests and coverage
 
