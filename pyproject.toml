@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "fastapi-cache2"
-version = "0.2.1"
-description = "Cache for FastAPI"
-authors = ["long2ice <long2ice@gmail.com>"]
+name = "playful-fastapi-cache2"
+version = "0.3.0"
+description = "Cache for FastAPI - Playful Fork"
+authors = ["long2ice <long2ice@gmail.com>", "mark@goplayfully.com"]
 license = "Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/long2ice/fastapi-cache"
-repository = "https://github.com/long2ice/fastapi-cache.git"
-documentation = "https://github.com/long2ice/fastapi-cache"
+homepage = "https://github.com/goplayfully/fastapi-cache"
+repository = "https://github.com/goplayfully/fastapi-cache.git"
+documentation = "https://github.com/goplayfully/fastapi-cache"
 keywords = ["fastapi", "cache", "caching"]
 packages = [
     { include = "fastapi_cache" }
