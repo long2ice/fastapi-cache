@@ -3,6 +3,7 @@ import logging
 import sys
 from functools import wraps
 from typing import Any, Awaitable, Callable, Optional, Type, TypeVar
+from fastapi.exceptions import HTTPException
 
 if sys.version_info >= (3, 10):
     from typing import ParamSpec
@@ -27,6 +28,7 @@ def cache(
     coder: Optional[Type[Coder]] = None,
     key_builder: Optional[Callable[..., Any]] = None,
     namespace: Optional[str] = "",
+    allow_client_caching: Optional[bool] = False,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     cache all function
@@ -34,6 +36,7 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param allow_client_caching:
 
     :return:
     """
@@ -81,6 +84,7 @@ def cache(
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
+            nonlocal allow_client_caching
 
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
@@ -105,9 +109,16 @@ def cache(
             copy_kwargs = kwargs.copy()
             request: Optional[Request] = copy_kwargs.pop("request", None)
             response: Optional[Response] = copy_kwargs.pop("response", None)
-            if (
-                request and request.headers.get("Cache-Control") in ("no-store", "no-cache")
-            ) or not FastAPICache.get_enable():
+            # Cache-Control: no-store means do not store the result
+            # Cache-Control: no-cache means retrieve a fresh result AND store it
+            # Cache-Control: no-store and Cache-Control: no-cache are mutually exclusive
+            no_store = request and request.headers.get("Cache-Control") in ["no-store"]
+            no_cache = request and request.headers.get("Cache-Control") in ["no-cache"]
+            if no_store or not FastAPICache.get_enable():
+                logger.debug("Cache disabled due to Cache-Control:no-store")
+                return await ensure_async_func(*args, **kwargs)
+            # Only use a cache for GET requests (no POST/PUT/etc.)
+            if request and request.method != "GET":
                 return await ensure_async_func(*args, **kwargs)
 
             coder = coder or FastAPICache.get_coder()
@@ -133,50 +144,70 @@ def cache(
                     args=args,
                     kwargs=copy_kwargs,
                 )
-            try:
-                ttl, ret = await backend.get_with_ttl(cache_key)
-            except Exception:
-                logger.warning(f"Error retrieving cache key '{cache_key}' from backend:", exc_info=True)
-                ttl, ret = 0, None
-            if not request:
-                if ret is not None:
-                    return coder.decode(ret)
+
+            # if no_cache, ensure a fresh result, otherwise check cache
+            cache_hit = False
+            ttl = 0
+            etag = ""
+            if no_cache:
                 ret = await ensure_async_func(*args, **kwargs)
+            else:
                 try:
-                    await backend.set(cache_key, coder.encode(ret), expire)
+                    ttl, encoded_ret = await backend.get_with_ttl(cache_key)
+                    if encoded_ret is None:
+                        logger.debug(f"Cache miss for key '{cache_key}'")
+                        ret = await ensure_async_func(*args, **kwargs)
+                    else:
+                        logger.debug(f"Cache hit for key '{cache_key}'")
+                        cache_hit = True
+                        ret = coder.decode(encoded_ret)
+                        etag = f"W/{hash(encoded_ret)}"
+
                 except Exception:
-                    logger.warning(f"Error setting cache key '{cache_key}' in backend:", exc_info=True)
+                    logger.warning(
+                        f"Error retrieving cache key '{cache_key}' from backend:", exc_info=True
+                    )
+                    ret = await ensure_async_func(*args, **kwargs)
+
+            # if we DIDN'T read from cache, then we should store
+            if cache_hit is False:
+                try:
+                    encoded_ret = coder.encode(ret)
+                    await backend.set(cache_key, encoded_ret, expire)
+                except Exception:
+                    logger.warning(
+                        f"Error setting cache key '{cache_key}' in backend:", exc_info=True
+                    )
+
+            # Now we need to return something. If it's an internal method
+            # then no further processing is needed
+            if not request:
                 return ret
 
-            if request.method != "GET":
-                return await ensure_async_func(request, *args, **kwargs)
-
-            if_none_match = request.headers.get("if-none-match")
-            if ret is not None:
-                if response:
+            # Otherwise, we optionally need some headers
+            if response:
+                if cache_hit:
                     response.headers["Cache-Control"] = f"max-age={ttl}"
-                    etag = f"W/{hash(ret)}"
-                    if if_none_match == etag:
-                        response.status_code = 304
-                        return response
                     response.headers["ETag"] = etag
-                return coder.decode(ret)
+                    response.headers["X-Cache-Hit"] = "True"
+                    # The If-None-Match HTTP request header makes the request
+                    # conditional, returning a 304 status if the ETag matches
+                    # something in the cache
+                    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match
+                    if request and etag == request.headers.get("if-none-match"):
+                        raise HTTPException(status_code=304, headers={"ETag": etag})
+                else:
+                    response.headers["Cache-Control"] = f"max-age={expire}"
+                    response.headers["ETag"] = f"W/{hash(coder.encode(ret))}"
 
-            ret = await ensure_async_func(*args, **kwargs)
-            encoded_ret = coder.encode(ret)
+                # For certain content, we want to handle all caching at the
+                # server (e.g. so we can do automatic invalidation) so
+                # this flag instructs the client (i.e. Browser/app) not
+                # to do any local caching
+                if allow_client_caching == False:
+                    response.headers["Cache-Control"] = "no-store"
 
-            try:
-                await backend.set(cache_key, encoded_ret, expire)
-            except Exception:
-                logger.warning(f"Error setting cache key '{cache_key}' in backend:", exc_info=True)
-
-            if response is not None:
-                # if called outside a Request/Response context, these headers
-                # aren't needed anyway
-                response.headers["Cache-Control"] = f"max-age={expire}"
-                etag = f"W/{hash(encoded_ret)}"
-                response.headers["ETag"] = etag
-            return ret
+                return ret
 
         return inner
 

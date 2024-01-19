@@ -42,13 +42,16 @@ async def get_date():
 async def get_datetime(request: Request, response: Response):
     return {"now": pendulum.now()}
 
+
 @cache(namespace="test")
 async def func_kwargs(*unused_args, **kwargs):
     return kwargs
 
+
 @app.get("/kwargs")
 async def get_kwargs(name: str):
     return await func_kwargs(name, name=name)
+
 
 @app.get("/sync-me")
 @cache(namespace="test")
@@ -56,6 +59,12 @@ def sync_me():
     # as per the fastapi docs, this sync function is wrapped in a thread,
     # thereby converted to async. fastapi-cache does the same.
     return 42
+
+
+@app.get("/client-side-cacheable")
+@cache(namespace="test", expire=2, allow_client_caching=True)
+async def no_store(request: Request, response: Response):
+    return {"now": pendulum.now()}
 
 
 @app.get("/cache_response_obj")
