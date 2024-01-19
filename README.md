@@ -35,16 +35,11 @@ or
 > pip install "fastapi-cache2[redis]"
 ```
 
-or
+## Testing
+This PR also adds new unit tests to verify the logic
 
 ```shell
-> pip install "fastapi-cache2[memcache]"
-```
-
-or
-
-```shell
-> pip install "fastapi-cache2[dynamodb]"
+> pytest -v
 ```
 
 ## Usage
@@ -75,12 +70,18 @@ async def get_cache():
 async def index():
     return dict(hello="world")
 
-
-@app.on_event("startup")
-async def startup():
-    redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Lifespan for managing Redis cache and other startup activities"""
+    # Load the Redis Cache
+    redis = aioredis.from_url(
+        settings.redis_endpoint,
+        username="default",
+        password=settings.get_secret("redis_default_password"),
+    )
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache", enable=enable)
+    yield
+    FastAPICache.reset()
 ```
 
 ### Initialization
@@ -118,6 +119,7 @@ async def index():
 
 By default use builtin key builder, if you need, you can override this and pass in `cache` or `FastAPICache.init` to
 take effect globally.
+
 
 ```python
 def my_key_builder(
