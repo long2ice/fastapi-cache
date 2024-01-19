@@ -190,6 +190,7 @@ def cache(
                     response.headers["Cache-Control"] = f"max-age={ttl}"
                     response.headers["ETag"] = etag
                     response.headers["X-Cache-Hit"] = "True"
+                    response.headers["X-Cache-TTL"] = f"{ttl}"
                     # The If-None-Match HTTP request header makes the request
                     # conditional, returning a 304 status if the ETag matches
                     # something in the cache

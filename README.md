@@ -180,6 +180,9 @@ If 'allow_client_caching' is set, the `Cache-Control: max-age=####` header will 
 ### X-Cache-Hit (Response)
 FastAPI-Cache will return a `X-Cache-Hit: True` header if the response is served from the cache
 
+### X-Cache-TTL (Response)
+If the server cache was hit, `X-Cache-TTL` will contain the (approx) remaining TTL for the cache
+
 ### ETag (Response)
 FastAPI-Cache will return an `ETag` header if the result can be cached by the caller
 

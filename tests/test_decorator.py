@@ -125,6 +125,10 @@ def test_cache_control_no_cache() -> None:
         response_time = response.json().get("now")
         assert response_time == new_cache_time
         assert response.headers.get("X-Cache-Hit") == "True"
+        cache_ttl = response.headers.get("X-Cache-TTL")
+        time.sleep(1)
+        response = client.get("/datetime")
+        assert cache_ttl != response.headers.get("X-Cache-TTL")
 
 
 def test_cache_control_etag() -> None:

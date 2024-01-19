@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "playful-fastapi-cache2"
-version = "0.3.0"
+version = "0.3.1"
 description = "Cache for FastAPI - Playful Fork"
 authors = ["long2ice <long2ice@gmail.com>", "mark@goplayfully.com"]
 license = "Apache-2.0"
