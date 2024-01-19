@@ -63,7 +63,9 @@ def sync_me():
 
 @app.get("/client-side-cacheable")
 @cache(namespace="test", expire=2, allow_client_caching=True)
-async def no_store(request: Request, response: Response):
+async def allow_client_cache(request: Request, response: Response):
+    """Return an object along with the Cache-Control: max-age header
+    indicating that it can be cached by the client (and intermediaries)"""
     return {"now": pendulum.now()}
 
 
