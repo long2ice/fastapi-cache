@@ -1,27 +1,28 @@
-checkfiles = fastapi_cache/ examples/ tests/
-py_warn = PYTHONDEVMODE=1
-
 up:
 	@poetry update
 
 deps:
-	@poetry install --no-root --with=linting -E all
+	@poetry install --no-root --with=linting --all-extras
 
-style: deps
-	@isort -src $(checkfiles)
-	@black $(checkfiles)
+format: deps
+	@poetry run tox run -e format
 
-check: deps
-	@black $(checkfiles) || (echo "Please run 'make style' to auto-fix style issues" && false)
-	@flake8 $(checkfiles)
-	@mypy ${checkfiles}
-	@pyright ${checkfiles}
+lint: deps
+	@poetry run tox run -e lint
 
 test: deps
-	$(py_warn) pytest
+	@poetry run tox
+
+test-parallel: deps
+	@poetry run tox run-parallel
 
 build: clean deps
 	@poetry build
+	@poetry run tox run -e lint_distributions
 
 clean:
 	@rm -rf ./dist
+
+# aliases
+check: lint
+style: format

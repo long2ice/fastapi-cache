@@ -4,13 +4,12 @@ from typing import Dict, Optional
 import pendulum
 import uvicorn
 from fastapi import FastAPI
-from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
-
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
 from pydantic import BaseModel
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
 
 app = FastAPI()
 
@@ -27,7 +26,7 @@ async def get_ret():
 @app.get("/")
 @cache(namespace="test", expire=10)
 async def index():
-    return dict(ret=await get_ret())
+    return {"ret": await get_ret()}
 
 
 @app.get("/clear")

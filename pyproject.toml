@@ -21,31 +21,33 @@ uvicorn = "*"
 redis = { version = "^4.2.0rc1", optional = true }
 aiomcache = { version = "*", optional = true }
 pendulum = "*"
-aiobotocore = { version = "^1.4.1", optional = true }
+aiobotocore = { version = ">=1.4.1,<3.0.0", optional = true }
 typing-extensions = { version = ">=4.1.0" }
-aiohttp = { version = ">=3.8.3", markers = "python_version >= \"3.11\"" }
+importlib-metadata = {version = "^6.6.0", python = "<3.8"}
 
 [tool.poetry.group.linting]
 optional = true
 
 [tool.poetry.group.linting.dependencies]
-flake8 = { version = "*", markers = "python_version >= \"3.10\"" }
-isort = { version = "*", markers = "python_version >= \"3.10\"" }
-black = { version = "*", markers = "python_version >= \"3.10\"" }
-mypy = { version = "^1.2.0", markers = "python_version >= \"3.10\"" }
-pyright = { version = "^1.1.306", markers="python_version >= \"3.10\"" }
-types-aiobotocore = { extras = ["dynamodb"], version = "^2.5.0.post2", markers = "python_version >= \"3.10\"" }
-types-redis = { version = "^4.5.4.2", markers = "python_version >= \"3.10\"" }
+mypy = { version = "^1.2.0", python = "^3.10" }
+pyright = { version = "^1.1.306", python = "^3.10" }
+types-aiobotocore = { extras = ["dynamodb"], version = "^2.5.0.post2", python = "^3.10" }
+types-redis = { version = "^4.5.4.2", python = "^3.10" }
+ruff = { version = ">=0.0.267,<0.1.2", python = "^3.10" }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
 requests = "*"
-coverage = "^6.5.0"
+coverage = ">=6.5,<8.0"
 httpx = "*"
+tox = "^4.5.1"
+towncrier = "^22.12.0"
 
-[build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+[tool.poetry.group.distributing]
+optional = true
+
+[tool.poetry.group.distributing.dependencies]
+twine = { version = "^4.0.2", python = "^3.10" }
 
 [tool.poetry.extras]
 redis = ["redis"]
@@ -53,12 +55,8 @@ memcache = ["aiomcache"]
 dynamodb = ["aiobotocore"]
 all = ["redis", "aiomcache", "aiobotocore"]
 
-[tool.black]
-line-length = 100
-target-version = ['py36', 'py37', 'py38', 'py39']
-
 [tool.mypy]
-files = ["fastapi_cache", "examples", "tests"]
+files = ["."]
 python_version = "3.7"
 # equivalent of --strict
 warn_unused_configs = true
@@ -80,7 +78,38 @@ strict_concatenate = true
 module = "examples.*.main"
 ignore_errors = true
 
+[tool.towncrier]
+directory = "changelog.d"
+filename = "CHANGELOG.md"
+package = "fastapi_cache"
+start_string = "<!-- towncrier release notes start -->\n"
+underlines = ["", "", ""]
+template = "changelog.d/changelog_template.jinja"
+title_format = "## [{version}](https://github.com/long2ice/fastapi-cache/tree/{version}) - {project_date}"
+issue_format = "[#{issue}](https://github.com/long2ice/fastapi-cache/issues/{issue})"
+
 [tool.pyright]
-include = ["fastapi_cache", "tests", "examples"]
 strict = ["fastapi_cache", "tests"]
 pythonVersion = "3.7"
+
+[tool.pytest.ini_options]
+addopts = "-p no:warnings"
+
+[tool.ruff]
+ignore = ["E501"]
+line-length = 80
+select = [
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "S",  # flake8-bandit
+    "W",  # pycodestyle warnings
+    "UP", # pyupgrade
+]
+target-version = "py37"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

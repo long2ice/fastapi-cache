@@ -1,6 +1,5 @@
-from fastapi_cache.types import Backend
 from fastapi_cache.backends import inmemory
-
+from fastapi_cache.types import Backend
 
 __all__ = ["Backend", "inmemory"]
 

@@ -1,0 +1,10 @@
+[tool.ruff]
+extend = "../pyproject.toml"
+extend-select = [
+    "PT", # flake8-pytest-style
+]
+ignore = ["S101"]
+
+[tool.ruff.isort]
+known-first-party = ["examples", "fastapi_cache"]
+

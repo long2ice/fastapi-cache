@@ -1,0 +1,35 @@
+name: Dependabot auto-merge
+on: pull_request_target
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v1
+
+      - uses: actions/checkout@v3
+      - name: Approve PR
+        # only auto-approve direct deps that are minor or patch updates
+        #   dependency type is indirect, direct:development or direct:production
+        #   version-update is semver-major, semver-minor or semver-patch
+        if: |
+          steps.dependabot-metadata.outputs.dependency-type != 'indirect'
+          && steps.dependabot-metadata.outputs.update-type != 'version-update:semver-major'
+        run: |
+          if [ "$(gh pr view "$PR_URL" --json reviewDecision -q .reviewDecision)" != "APPROVED" ]; then
+            gh pr review --approve "$PR_URL"
+          else
+            echo "PR already approved, skipping additional approvals to minimize emails/notification noise."
+          fi
+          gh pr merge --auto --squash "$PR_URL"
+          gh pr edit "$PR_URL" --add-label "auto-merge"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

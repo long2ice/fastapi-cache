@@ -1,0 +1,30 @@
+name: Labeller
+on:
+  pull_request_target:
+    types:
+      - auto_merge_disabled
+      - auto_merge_enabled
+  
+permissions: {}
+
+jobs:
+  add_remove_labels:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Add auto-merge label
+        if: github.event.action == 'auto_merge_enabled'
+        run: gh pr edit "$PR_URL" --add-label "auto-merge"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Remove auto-merge label
+        if: github.event.action == 'auto_merge_disabled'
+        run: gh pr edit "$PR_URL" --remove-label "auto-merge"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

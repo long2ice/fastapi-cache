@@ -2,7 +2,16 @@ import datetime
 import json
 import pickle  # nosec:B403
 from decimal import Decimal
-from typing import Any, Callable, ClassVar, Dict, Optional, TypeVar, Union, overload
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Optional,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
@@ -43,7 +52,7 @@ def object_hook(obj: Any) -> Any:
     if _spec_type in CONVERTERS:
         return CONVERTERS[_spec_type](obj["val"])
     else:
-        raise TypeError("Unknown {}".format(_spec_type))
+        raise TypeError(f"Unknown {_spec_type}")
 
 
 class Coder:
@@ -119,7 +128,7 @@ class PickleCoder(Coder):
 
     @classmethod
     def decode(cls, value: bytes) -> Any:
-        return pickle.loads(value)  # nosec:B403,B301
+        return pickle.loads(value)  # noqa: S301
 
     @classmethod
     def decode_as_type(cls, value: bytes, *, type_: Optional[_T]) -> Any:

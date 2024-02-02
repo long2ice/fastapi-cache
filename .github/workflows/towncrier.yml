@@ -1,0 +1,54 @@
+name: Changelog
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+      - unlabeled
+    branches:
+      - main
+
+jobs:
+  towncrier:
+    name: Towncrier
+    runs-on: ubuntu-latest
+    # skip if this is a bot or the PR has the skip-changelog label
+    # note that the towncrier check command can recognize a release PR, by looking
+    # for changes to the CHANGELOG.md file.
+    if: |
+      !(
+           github.event.pull_request.user.login == 'dependabot[bot]'
+        || contains(github.event.pull_request.labels.*.name, 'skip-changelog')
+      )
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Poetry
+      run: pipx install poetry
+    - name: Setup Python
+      id: setup-python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+        cache: poetry
+    - name: Install development tools
+      run: poetry install --no-root --only=dev
+    - name: Check for a towncrier fragment
+      run: |
+        # fetch enough commits from this merge commit to the base sha to ensure
+        # towncrier can inspect what changed
+        while [[ -z $(git merge-base $PR_BASE_SHA HEAD 2> /dev/null) ]]; do
+          git fetch --quiet --deepen=50 --no-tags --no-recurse-submodules origin $PR_BASE_SHA HEAD
+        done
+        if poetry run towncrier check --compare-with $PR_BASE_SHA; then
+          gh pr edit "$PR_URL" --add-label "changelog-provided"
+        else
+          gh pr edit "$PR_URL" --remove-label "changelog-provided"
+          exit 1
+        fi
+
+      env:
+        PR_BASE_SHA: ${{github.event.pull_request.base.sha}}
+        PR_URL: ${{github.event.pull_request.html_url}}
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

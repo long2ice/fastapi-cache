@@ -2,20 +2,20 @@
 import time
 
 import pendulum
-import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from redis.asyncio.connection import ConnectionPool
-from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
-
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.coder import PickleCoder
 from fastapi_cache.decorator import cache
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
+
+import redis.asyncio as redis
+from redis.asyncio.connection import ConnectionPool
 
 app = FastAPI()
 
@@ -38,7 +38,7 @@ async def get_ret():
 @app.get("/")
 @cache(namespace="test", expire=10)
 async def index():
-    return dict(ret=await get_ret())
+    return {"ret": await get_ret()}
 
 
 @app.get("/clear")
@@ -58,7 +58,7 @@ async def get_data(request: Request, response: Response):
 @cache(namespace="test", expire=10)
 def blocking():
     time.sleep(2)
-    return dict(ret=42)
+    return {"ret": 42}
 
 
 @app.get("/datetime")
