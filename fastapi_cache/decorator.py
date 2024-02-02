@@ -116,11 +116,12 @@ def cache(
         func: Callable[P, Awaitable[R]]
     ) -> Callable[P, Awaitable[Union[R, Response]]]:
         # get_typed_signature ensures that any forward references are resolved first
+        return_type = get_typed_return_annotation(func)
         wrapped_signature = get_typed_signature(func)
+        wrapped_signature._return_annotation = return_type  # type: ignore[attr-defined]
         to_inject: List[Parameter] = []
         request_param = _locate_param(wrapped_signature, injected_request, to_inject)
         response_param = _locate_param(wrapped_signature, injected_response, to_inject)
-        return_type = get_typed_return_annotation(func)
 
         @wraps(func)
         async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
