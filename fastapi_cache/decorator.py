@@ -90,7 +90,10 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
-) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
+) -> Callable[
+    [Callable[P, Union[R, Awaitable[R]]]],
+    Callable[P, Union[R, Response, Awaitable[Union[R, Response]]]]
+]:
     """
     cache all function
     :param namespace:
@@ -113,7 +116,7 @@ def cache(
     )
 
     def wrapper(
-        func: Callable[P, Awaitable[R]]
+        func: Callable[P, Union[R, Awaitable[R]]]
     ) -> Callable[P, Awaitable[Union[R, Response]]]:
         # get_typed_signature ensures that any forward references are resolved first
         wrapped_signature = get_typed_signature(func)
@@ -141,7 +144,8 @@ def cache(
                     # unintuitively, we have to await once here, so that caller
                     # does not have to await twice. See
                     # https://stackoverflow.com/a/59268198/532513
-                    return await func(*args, **kwargs)
+                    _f = cast(Callable[P, Awaitable[R]], func)
+                    return await _f(*args, **kwargs)
                 else:
                     # sync, wrap in thread and return async
                     # see above why we have to await even although caller also awaits.
