@@ -56,7 +56,7 @@ async def get_data(request: Request, response: Response):
 # i.e. running cached sync functions in threadpool just like FastAPI itself!
 @app.get("/blocking")
 @cache(namespace="test", expire=10)
-def blocking():
+def blocking() -> dict:
     time.sleep(2)
     return {"ret": 42}
 

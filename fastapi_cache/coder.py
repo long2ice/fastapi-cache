@@ -15,10 +15,10 @@ from typing import (
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseConfig, ValidationError, fields
+from pydantic.v1 import BaseConfig, ValidationError, fields
 from starlette.responses import JSONResponse
 from starlette.templating import (
-    _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
+    _TemplateResponse as TemplateResponse,  # type: ignore[unused-ignore]
 )
 
 _T = TypeVar("_T", bound=type)
@@ -26,8 +26,8 @@ _T = TypeVar("_T", bound=type)
 
 CONVERTERS: Dict[str, Callable[[str], Any]] = {
     # Pendulum 3.0.0 adds parse to __all__, at which point these ignores can be removed
-    "date": lambda x: pendulum.parse(x, exact=True),  # type: ignore[attr-defined]
-    "datetime": lambda x: pendulum.parse(x, exact=True),  # type: ignore[attr-defined]
+    "date": lambda x: pendulum.parse(x, exact=True),  # type: ignore[unused-ignore]
+    "datetime": lambda x: pendulum.parse(x, exact=True),  # type: ignore[unused-ignore]
     "decimal": Decimal,
 }
 

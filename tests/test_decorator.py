@@ -22,19 +22,19 @@ def test_datetime() -> None:
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         now = response.json().get("now")
-        now_ = pendulum.now().replace(microsecond=0)  # type: ignore[no-untyped-call]
-        assert pendulum.parse(now).replace(microsecond=0) == now_  # type: ignore[attr-defined]
+        now_ = pendulum.now().replace(microsecond=0)
+        assert pendulum.parse(now).replace(microsecond=0) == now_  # type: ignore[call-arg,union-attr]
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "HIT"
         now = response.json().get("now")
-        assert pendulum.parse(now).replace(microsecond=0) == now_  # type: ignore[attr-defined]
+        assert pendulum.parse(now).replace(microsecond=0) == now_  # type: ignore[call-arg,union-attr]
         time.sleep(3)
         response = client.get("/datetime")
         now = response.json().get("now")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
-        now = pendulum.parse(now).replace(microsecond=0)  # type: ignore[attr-defined]
+        now = pendulum.parse(now).replace(microsecond=0)  # type: ignore[call-arg,union-attr]
         assert now != now_
-        assert now == pendulum.now().replace(microsecond=0)  # type: ignore[no-untyped-call]
+        assert now == pendulum.now().replace(microsecond=0)
 
 
 def test_date() -> None:
@@ -42,18 +42,18 @@ def test_date() -> None:
     with TestClient(app) as client:
         response = client.get("/date")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
-        assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]
+        assert pendulum.parse(response.json()) == pendulum.today()
 
         # do it again to test cache
         response = client.get("/date")
         assert response.headers.get("X-FastAPI-Cache") == "HIT"
-        assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]
+        assert pendulum.parse(response.json()) == pendulum.today()
 
         # now test with cache disabled, as that's a separate code path
         FastAPICache._enable = False  # pyright: ignore[reportPrivateUsage]
         response = client.get("/date")
         assert "X-FastAPI-Cache" not in response.headers
-        assert pendulum.parse(response.json()) == pendulum.today()  # type: ignore[attr-defined]
+        assert pendulum.parse(response.json()) == pendulum.today()
         FastAPICache._enable = True  # pyright: ignore[reportPrivateUsage]
 
 
