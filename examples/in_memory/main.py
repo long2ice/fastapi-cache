@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
