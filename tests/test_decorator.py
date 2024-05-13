@@ -3,11 +3,10 @@ from typing import Any, Generator
 
 import pendulum
 import pytest
-from starlette.testclient import TestClient
-
 from examples.in_memory.main import app
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
+from starlette.testclient import TestClient
 
 
 @pytest.fixture(autouse=True)
@@ -111,4 +110,17 @@ def test_alternate_injected_namespace() -> None:
     with TestClient(app) as client:
         response = client.get("/namespaced_injection")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
-        assert response.json() == {"__fastapi_cache_request": 42, "__fastapi_cache_response": 17}
+        assert response.json() == {
+            "__fastapi_cache_request": 42,
+            "__fastapi_cache_response": 17,
+        }
+
+
+def test_annotated_return_type() -> None:
+    with TestClient(app) as client:
+        response = client.get("/openapi.json")
+        assert response.status_code == 200
+        js = response.json()
+        assert js["paths"]["/pydantic_instance"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]["$ref"] == "#/components/schemas/Item"
