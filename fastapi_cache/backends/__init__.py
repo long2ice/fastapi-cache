@@ -26,3 +26,10 @@ except ImportError:
     pass
 else:
     __all__ += ["redis"]
+
+try:
+    from fastapi_cache.backends import libsql
+except ImportError:
+    pass
+else:
+    __all__ += ["libsql"]

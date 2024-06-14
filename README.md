@@ -7,11 +7,11 @@
 ## Introduction
 
 `fastapi-cache` is a tool to cache FastAPI endpoint and function results, with
-backends supporting Redis, Memcached, and Amazon DynamoDB.
+backends supporting Redis, Memcached, libsql and Amazon DynamoDB.
 
 ## Features
 
-- Supports `redis`, `memcache`, `dynamodb`, and `in-memory` backends.
+- Supports `redis`, `memcache`, `dynamodb`, `libsql` and `in-memory` backends.
 - Easy integration with [FastAPI](https://fastapi.tiangolo.com/).
 - Support for HTTP cache headers like `ETag` and `Cache-Control`, as well as conditional `If-Match-None` requests.
 
@@ -21,6 +21,7 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 - `redis` when using `RedisBackend`.
 - `memcache` when using `MemcacheBackend`.
 - `aiobotocore` when using `DynamoBackend`.
+- `libsql-client` when using `libsql`
 
 ## Install
 
@@ -44,6 +45,10 @@ or
 
 ```shell
 > pip install "fastapi-cache2[dynamodb]"
+```
+
+```shell
+> pip install "fastapi-cache2[libsql]"
 ```
 
 ## Usage
