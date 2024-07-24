@@ -90,7 +90,7 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
-) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     cache all function
     :param namespace:
@@ -114,7 +114,7 @@ def cache(
 
     def wrapper(
         func: Callable[P, Awaitable[R]]
-    ) -> Callable[P, Awaitable[Union[R, Response]]]:
+    ) -> Callable[P, Awaitable[R]]:
         # get_typed_signature ensures that any forward references are resolved first
         wrapped_signature = get_typed_signature(func)
         to_inject: List[Parameter] = []

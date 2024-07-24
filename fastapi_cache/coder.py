@@ -2,20 +2,12 @@ import datetime
 import json
 import pickle  # nosec:B403
 from decimal import Decimal
-from typing import (
-    Any,
-    Callable,
-    ClassVar,
-    Dict,
-    Optional,
-    TypeVar,
-    Union,
-    overload,
-)
+from typing import Any, Callable, ClassVar, Dict, Optional, TypeVar, Union, overload
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseConfig, ValidationError, fields
+from pydantic import create_model
+from pydantic._internal._model_construction import ModelMetaclass
 from starlette.responses import JSONResponse
 from starlette.templating import (
     _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
@@ -64,12 +56,7 @@ class Coder:
     def decode(cls, value: bytes) -> Any:
         raise NotImplementedError
 
-    # (Shared) cache for endpoint return types to Pydantic model fields.
-    # Note that subclasses share this cache! If a subclass overrides the
-    # decode_as_type method and then stores a different kind of field for a
-    # given type, do make sure that the subclass provides its own class
-    # attribute for this cache.
-    _type_field_cache: ClassVar[Dict[Any, fields.ModelField]] = {}
+    _type_field_cache: ClassVar[Dict[Any, ModelMetaclass]] = {}
 
     @overload
     @classmethod
@@ -89,18 +76,18 @@ class Coder:
 
         """
         result = cls.decode(value)
+
         if type_ is not None:
             try:
-                field = cls._type_field_cache[type_]
+                ModelField = cls._type_field_cache[type_]
             except KeyError:
-                field = cls._type_field_cache[type_] = fields.ModelField(
-                    name="body", type_=type_, class_validators=None, model_config=BaseConfig
+                ModelField = create_model(
+                    'ModelField', value=(type_, ...)
                 )
-            result, errors = field.validate(result, {}, loc=())
-            if errors is not None:
-                if not isinstance(errors, list):
-                    errors = [errors]
-                raise ValidationError(errors, type_)
+                cls._type_field_cache[type_] = ModelField
+
+            return ModelField.construct(value=result).value # type: ignore
+
         return result
 
 

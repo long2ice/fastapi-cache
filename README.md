@@ -4,6 +4,14 @@
 [![license](https://img.shields.io/github/license/long2ice/fastapi-cache)](https://github.com/long2ice/fastapi-cache/blob/main/LICENSE)
 [![CI/CD](https://github.com/long2ice/fastapi-cache/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/long2ice/fastapi-cache/actions/workflows/ci-cd.yml)
 
+## What's changed in our fork?
+
+1. Add compatibility for pydantic2. See https://github.com/long2ice/fastapi-cache/issues/249 and https://github.com/long2ice/fastapi-cache/issues/236
+2. Fix typing broken in  https://github.com/yoco-tech/fastapi-cache/commit/013be85f97ae696b97d1d348e4f07d19fda86228
+3. Bump up min python version to ^3.8
+4. Add pydantic as a requirement
+5. Bump up allowed version of redis
+
 ## Introduction
 
 `fastapi-cache` is a tool to cache FastAPI endpoint and function results, with
