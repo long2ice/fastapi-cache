@@ -1,6 +1,7 @@
 import time
 from http import HTTPStatus
 from typing import Any, Generator
+from unittest.mock import patch
 
 import pendulum
 import pytest
@@ -9,6 +10,14 @@ from starlette.testclient import TestClient
 from examples.in_memory.main import app
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
+
+
+@pytest.fixture
+def cache_unavailable():
+    # Mock cache to simulate unavailability by raising an exception in the cache retrieval method
+    with patch("fastapi_cache.backends.inmemory.InMemoryBackend.get") as mock_cache_get:
+        mock_cache_get.side_effect = Exception("Simulated cache failure")
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -136,3 +145,16 @@ def test_cache_control() -> None:
 
         response = client.get("/cached_put")
         assert response.json() == {"value": 2}
+
+####################CACHE UNAVAILABLE TESTS####################
+def test_cache_failure():
+   with TestClient(app) as client:
+        # Simulate cache failure with continue_on_error=False
+        response = client.get("/cache_failure_example")
+        assert response.status_code == 503  # Expect a 503 error due to cache failure
+        assert response.json() == {"detail": "Cache initialization failed."}
+
+        # Now test with continue_on_error=True (should continue without caching)
+        response = client.get("/cache_failure_example?continue_on_error=true")
+        assert response.status_code == 200  # Expect success even with cache failure
+        assert response.json() == {"message": "This should simulate a cache failure."}

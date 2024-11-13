@@ -90,6 +90,7 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
+    continue_on_error: bool = False,
 ) -> Callable[[Union[Callable[P, Awaitable[R]], Callable[P, R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -98,6 +99,7 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param continue_on_error:
 
     :return:
     """
@@ -154,13 +156,23 @@ def cache(
 
             if _uncacheable(request):
                 return await ensure_async_func(*args, **kwargs)
-
-            prefix = FastAPICache.get_prefix()
-            coder = coder or FastAPICache.get_coder()
-            expire = expire or FastAPICache.get_expire()
-            key_builder = key_builder or FastAPICache.get_key_builder()
-            backend = FastAPICache.get_backend()
-            cache_status_header = FastAPICache.get_cache_status_header()
+            
+            try:
+                prefix = FastAPICache.get_prefix()
+                coder = coder or FastAPICache.get_coder()
+                expire = expire or FastAPICache.get_expire()
+                key_builder = key_builder or FastAPICache.get_key_builder()
+                backend = FastAPICache.get_backend()
+                cache_status_header = FastAPICache.get_cache_status_header()
+            except Exception as e:
+                logger.error(f"Error initializing cache: {e}")
+                logger.info(continue_on_error)
+                if continue_on_error == True:
+                    logger.warning("Continuing without caching")
+                    return await ensure_async_func(*args, **kwargs)
+                else:
+                    raise
+            
 
             cache_key = key_builder(
                 func,
@@ -173,14 +185,13 @@ def cache(
             if isawaitable(cache_key):
                 cache_key = await cache_key
             assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
-
+            
             try:
                 ttl, cached = await backend.get_with_ttl(cache_key)
             except Exception:
-                logger.warning(
-                    f"Error retrieving cache key '{cache_key}' from backend:",
-                    exc_info=True,
-                )
+                if continue_on_error:
+                    return await ensure_async_func(*args, **kwargs)
+                logger.warning(f"Cache retrieval error for key '{cache_key}':", exc_info=True)
                 ttl, cached = 0, None
 
             if cached is None  or (request is not None and request.headers.get("Cache-Control") == "no-cache") :  # cache miss

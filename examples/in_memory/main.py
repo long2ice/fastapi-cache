@@ -4,7 +4,8 @@ from typing import AsyncIterator, Dict, Optional
 
 import pendulum
 import uvicorn
-from fastapi import FastAPI
+import logging
+from fastapi import FastAPI, Query
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
@@ -12,11 +13,68 @@ from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+logger = logging.getLogger(__name__)
+from fastapi import HTTPException
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     FastAPICache.init(InMemoryBackend())
     yield
+
+
+def simulate_cache_failure():
+    """Simulate cache failure by resetting FastAPICache."""
+    FastAPICache.reset()  # Reset cache settings
+
+def invalid_cache(expire: int = 10, namespace: str = "invalid_cache", continue_on_error: bool = True):
+    """Decorator to simulate cache failure."""
+    print("Invalid cache decorator called", continue_on_error)
+    def decorator(func):
+        async def wrapper():
+            # Get the continue_on_error from kwargs if present (passed from FastAPI route)
+            
+            # Simulate cache failure by resetting the cache
+            simulate_cache_failure()
+
+            try:
+                # Initialize cache settings or use defaults
+                prefix = FastAPICache.get_prefix() or ""
+                coder = FastAPICache.get_coder() or None
+                cache_expire = expire if expire is not None else FastAPICache.get_expire()
+                key_builder = FastAPICache.get_key_builder() or None
+                backend = FastAPICache.get_backend() or None
+                cache_status_header = FastAPICache.get_cache_status_header() or None
+
+                # Now execute the original function with cache logic applied
+                return await func()
+            
+            except AssertionError as e:
+                logger.error(f"Error initializing cache: {e}")
+                
+                if continue_on_error:
+                    logger.warning("Continuing without caching")
+                    return await func()  # Continue without caching
+                else:
+                    raise HTTPException(status_code=503, detail="Cache initialization failed.")
+
+            except Exception as e:
+                logger.critical(f"Critical error initializing cache: {e}")
+                raise HTTPException(status_code=503, detail=f"Cache failure: {str(e)}")
+
+        # Apply the cache decorator with the provided parameters (expire and namespace)
+        return cache(expire=expire, namespace=namespace, continue_on_error=continue_on_error)(wrapper)
+    
+    return decorator
+
+
+def cache_failure_example(expire: int = 5, namespace: str = "test_namespace", continue_on_error: bool = False):
+    # Apply the decorator with dynamic values for the parameters
+    @invalid_cache(expire=expire, namespace=namespace, continue_on_error=continue_on_error)
+    async def inner_cache_failure_example():
+        return {"message": "This should simulate a cache failure."}
+    
+    # Return the decorated function
+    return inner_cache_failure_example
 
 
 app = FastAPI(lifespan=lifespan)
@@ -134,6 +192,21 @@ def namespaced_injection(
         "__fastapi_cache_request": __fastapi_cache_request,
         "__fastapi_cache_response": __fastapi_cache_response,
     }
+
+
+##############################################CACHE FAILURE SIMULATION##############################################
+
+@app.get("/cache_failure_example")
+async def cache_failure_endpoint(
+    expire: int = Query(5, ge=1),  # Default expiration is 5 seconds, but must be at least 1 second
+    namespace: str = Query("test_namespace"),
+    continue_on_error: bool = Query(False)
+):
+    # Call the dynamically generated function with the specified parameters
+    func = cache_failure_example(expire=expire, namespace=namespace, continue_on_error=continue_on_error)
+    
+    # Execute the function and return the result
+    return await func()
 
 
 if __name__ == "__main__":
