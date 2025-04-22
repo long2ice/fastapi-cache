@@ -22,7 +22,7 @@ class RedisBackend(Backend):
         await self.redis.set(key, value, ex=expire)  # type: ignore[union-attr]
 
     async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
-        if namespace:
+        if namespace and not namespace.strip():
             lua = f"for i, name in ipairs(redis.call('KEYS', '{namespace}:*')) do redis.call('DEL', name); end"
             return await self.redis.eval(lua, numkeys=0)  # type: ignore[union-attr,no-any-return]
         elif key:
