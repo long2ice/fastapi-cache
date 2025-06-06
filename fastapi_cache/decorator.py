@@ -90,6 +90,29 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
+    condition: Callable[[object], bool] = (lambda x: True),
+    # Condition must be met to be put into cache (view next line)
+    # fastapi-cache caches exceptions and error responses (e.g. returning None);
+    # This condition makes it such that a condition must be met by the return value before being put into the cache.
+    #
+    # Example:
+    #
+    # counter = 0
+    # 
+    # @app.get('/')
+    # @cache(expire=60, condition=(lambda x: x is not None and x is not HTTPException))
+    # def exampleFunction():
+    #     global counter
+    #     print(f'Current counter value is: {counter}')
+    #     if counter == 0:
+    #         counter += 1
+    #         return None
+    #     elif counter == 1:
+    #         counter += 1
+    #         raise HTTPException(400, 'This value will not be cached!')
+    #     else:
+    #         # Return value is cached here
+    #         return counter
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -185,6 +208,9 @@ def cache(
 
             if cached is None  or (request is not None and request.headers.get("Cache-Control") == "no-cache") :  # cache miss
                 result = await ensure_async_func(*args, **kwargs)
+                if (not condition(result)):
+                    return result # Do not cache if condition is met
+                
                 to_cache = coder.encode(result)
 
                 try:
