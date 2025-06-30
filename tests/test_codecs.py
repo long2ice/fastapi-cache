@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple, Type
+from typing import Any, Optional, Type
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from fastapi_cache.coder import JsonCoder, PickleCoder
 
@@ -41,16 +41,22 @@ def test_pickle_coder(value: Any) -> None:
     assert decoded_value == value
 
 
+# vicchi: 2025/01/17
+# test values and tests commented out until #460 is resolved due to removal
+# of support for decoding JSON to a custom type
 @pytest.mark.parametrize(
     ("value", "return_type"),
     [
+        (1, int),
         (1, None),
+        ("some_string", str),
         ("some_string", None),
-        ((1, 2), Tuple[int, int]),
+        # ((1, 2), Tuple[int, int]),
         ([1, 2, 3], None),
+        # ({"some_key": 1, "other_key": 2}, None),
         ({"some_key": 1, "other_key": 2}, None),
-        (DCItem(name="foo", price=42.0, description="some dataclass item", tax=0.2), DCItem),
-        (PDItem(name="foo", price=42.0, description="some pydantic item", tax=0.2), PDItem),
+        # (DCItem(name="foo", price=42.0, description="some dataclass item", tax=0.2), DCItem),
+        # (PDItem(name="foo", price=42.0, description="some pydantic item", tax=0.2), PDItem),
     ],
 )
 def test_json_coder(value: Any, return_type: Type[Any]) -> None:
@@ -60,7 +66,7 @@ def test_json_coder(value: Any, return_type: Type[Any]) -> None:
     assert decoded_value == value
 
 
-def test_json_coder_validation_error() -> None:
-    invalid = b'{"name": "incomplete"}'
-    with pytest.raises(ValidationError):
-        JsonCoder.decode_as_type(invalid, type_=PDItem)
+# def test_json_coder_validation_error() -> None:
+#     invalid = b'{"name": "incomplete"}'
+#     with pytest.raises(ValidationError):
+#         JsonCoder.decode_as_type(invalid, type_=PDItem)

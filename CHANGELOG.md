@@ -8,6 +8,27 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [0.2.2](https://github.com/long2ice/fastapi-cache/tree/0.2.2) - 2025-01-18
+
+### Bug Fixes
+
+- Fix failing tests (#459) [#459](https://github.com/long2ice/fastapi-cache/issues/459)
+
+### Build Changes
+
+- Use `importlib.metadata` to include project version string as `fastapi_cache.__version__`. [#172](https://github.com/long2ice/fastapi-cache/issues/172)
+- (dependabot) Bump actions/checkout from 2 to 4 [#293](https://github.com/long2ice/fastapi-cache/issues/293)
+- (dependabot) Bump actions/download-artifact from 2 to 4 (#359) [#359](https://github.com/long2ice/fastapi-cache/issues/359)
+- (dependabot) Bump actions/upload-artifact from 3 to 4 (#360) [#360](https://github.com/long2ice/fastapi-cache/issues/360)
+- (dependabot) Bump actions/cache from 3 to 4 (#378) [#378](https://github.com/long2ice/fastapi-cache/issues/378)
+- (dependabot) Bump dependabot/fetch-metadata from 1 to 2 (#464) [#464](https://github.com/long2ice/fastapi-cache/issues/464)
+- (dependabot) Bump tox from 4.20.0 to 4.23.2 (#466) [#466](https://github.com/long2ice/fastapi-cache/issues/466)
+- (dependabot) Bump fastapi from 0.115.0 to 0.115.6 (#486) [#486](https://github.com/long2ice/fastapi-cache/issues/486)
+- (dependabot) Bump redis from 5.0.8 to 5.2.1 (#490) [#490](https://github.com/long2ice/fastapi-cache/issues/490)
+- (dependabot) Bump uvicorn from 0.30.6 to 0.33.0 (#493) [#493](https://github.com/long2ice/fastapi-cache/issues/493)
+- (dependabot) Bump pyright from 1.1.381 to 1.1.392.post0 (#507) [#507](https://github.com/long2ice/fastapi-cache/issues/507)
+- (dependabot) Bump towncrier from 22.12.0 to 24.8.0 (#509) [#509](https://github.com/long2ice/fastapi-cache/issues/509)
+
 ## 0.2
 
 ### 0.2.1

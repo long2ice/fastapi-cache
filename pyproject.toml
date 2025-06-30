@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastapi-cache2"
-version = "0.2.2"
+version = "0.2.3"
 description = "Cache for FastAPI"
 authors = ["long2ice <long2ice@gmail.com>"]
 license = "Apache-2.0"
@@ -41,7 +41,7 @@ requests = "*"
 coverage = ">=6.5,<8.0"
 httpx = "*"
 tox = "^4.5.1"
-towncrier = "^22.12.0"
+towncrier = "24.8.0"
 
 [tool.poetry.group.distributing]
 optional = true
@@ -87,6 +87,36 @@ underlines = ["", "", ""]
 template = "changelog.d/changelog_template.jinja"
 title_format = "## [{version}](https://github.com/long2ice/fastapi-cache/tree/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/long2ice/fastapi-cache/issues/{issue})"
+
+[[tool.towncrier.type]]
+directory = 'feature'
+name = 'New Features'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'removed'
+name = 'Deprecated/Removed Features'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'fix'
+name = 'Bug Fixes'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'build'
+name = 'Build Changes'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'doc'
+name = 'Documentation'
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = 'misc'
+name = 'Everything Else'
+showcontent = true
 
 [tool.pyright]
 strict = ["fastapi_cache", "tests"]
