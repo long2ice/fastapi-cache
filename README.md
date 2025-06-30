@@ -221,12 +221,40 @@ When using the Redis backend, please make sure you pass in a redis client that d
 
 [redis-decode]: https://redis-py.readthedocs.io/en/latest/examples/connection_examples.html#by-default-Redis-return-binary-responses,-to-decode-them-use-decode_responses=True
 
+## Notes on `Cache-Control` header
+The cache behavior can be controlled by the client by passing the `Cache-Control` request header. The behavior is described below: 
+- `no-cache`: doesn't use cache even if the value is present but stores the response in the cache.
+- `no-store`: can use cache if present but will not add/update to cache.
+- `no-cache,no-store`: i.e. both are passed, it will neither store nor use the cache. Will remove the `max-age` and `ETag` as well from the response header.
+
 ## Tests and coverage
 
 ```shell
 coverage run -m pytest
 coverage html
 xdg-open htmlcov/index.html
+```
+
+## Linting
+
+### Manually
+- Install the optional `linting` related dependency
+```shell
+poetry install --with linting
+```
+
+- Run the linting check
+```shell
+ruff check --show-source .
+```
+- With auto-fix
+```shell
+ruff check --show-source . --fix
+```
+
+### Using make command (one-liner)
+```shell
+make lint
 ```
 
 ## License

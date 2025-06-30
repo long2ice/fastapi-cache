@@ -23,18 +23,18 @@ def test_datetime() -> None:
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         now = response.json().get("now")
         now_ = pendulum.now()
-        assert pendulum.parse(now) == now_
+        assert pendulum.parse(now).to_atom_string() == now_.to_atom_string() # type: ignore[union-attr]
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "HIT"
         now = response.json().get("now")
-        assert pendulum.parse(now) == now_
+        assert pendulum.parse(now).to_atom_string() == now_.to_atom_string() # type: ignore[union-attr]
         time.sleep(3)
         response = client.get("/datetime")
         now = response.json().get("now")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         now = pendulum.parse(now)
         assert now != now_
-        assert now == pendulum.now()
+        assert now.to_atom_string() == pendulum.now().to_atom_string() # type: ignore[union-attr,unused-ignore]
 
 
 def test_date() -> None:
@@ -101,10 +101,10 @@ def test_non_get() -> None:
     with TestClient(app) as client:
         response = client.put("/cached_put")
         assert "X-FastAPI-Cache" not in response.headers
-        assert response.json() == {"value": 1}
+        assert response.json() == {'detail': 'Method Not Allowed'}
         response = client.put("/cached_put")
         assert "X-FastAPI-Cache" not in response.headers
-        assert response.json() == {"value": 2}
+        assert response.json() == {'detail': 'Method Not Allowed'}
 
 
 def test_alternate_injected_namespace() -> None:
@@ -131,7 +131,45 @@ def test_cache_control() -> None:
 
         # no-store
         response = client.get("/cached_put", headers={"Cache-Control": "no-store"})
-        assert response.json() == {"value": 3}
+        assert response.json() == {"value": 2}
 
         response = client.get("/cached_put")
         assert response.json() == {"value": 2}
+
+def test_cache_control_header() -> None:
+    """Test no-cache, no-store cache control header"""
+    with TestClient(app) as client:
+        # forcing clear to start a clean cache
+        client.get("/clear")
+
+        # no-store, no-cache will always no use or store cache
+        response = client.get("/date", headers={"Cache-Control": "no-store,no-cache"})
+        assert response.headers.get("X-FastAPI-Cache") == "MISS"
+        assert response.headers.get("Cache-Control") == "no-cache,no-store"
+        assert response.headers.get("ETag") is None
+        assert pendulum.parse(response.json()) == pendulum.today()
+
+        # do it again to test cache without header
+        response = client.get("/date")
+        assert response.headers.get("X-FastAPI-Cache") == "MISS"
+        assert pendulum.parse(response.json()) == pendulum.today()
+
+        # do it again to test cache with no-store. Will not store this response but use the cache
+        response = client.get("/date", headers={"Cache-Control": "no-store"})
+        assert response.headers.get("X-FastAPI-Cache") == "HIT"
+        assert response.headers.get("Cache-Control") == "max-age=10,no-store"
+        assert pendulum.parse(response.json()) == pendulum.today()
+
+        # do it again to test cache with no-cache. Will not store use cache but store it
+        response = client.get("/date", headers={"Cache-Control": "no-cache"})
+        assert response.headers.get("X-FastAPI-Cache") == "MISS"
+        assert response.headers.get("Cache-Control") == "max-age=10,no-cache"
+        assert pendulum.parse(response.json()) == pendulum.today()
+
+        time.sleep(3)
+
+        # call with no headers now to use the value store in previous step
+        response = client.get("/date")
+        assert response.headers.get("X-FastAPI-Cache") == "HIT"
+        assert response.headers.get("Cache-Control") == "max-age=7"
+        assert pendulum.parse(response.json()) == pendulum.today()

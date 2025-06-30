@@ -8,6 +8,12 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 <!-- towncrier release notes start -->
 
+## [Unreleased]
+
+- Add Cache-Control header logic change for no-cache, no-store
+- Fix old test cases broken after previous merge
+- Update Readme for linting and added Cache-Control section
+
 ## 0.2
 
 ### 0.2.1
