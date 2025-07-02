@@ -1,5 +1,5 @@
 import abc
-from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, TypeAlias, Union
 
 from starlette.requests import Request
 from starlette.responses import Response
@@ -38,3 +38,23 @@ class Backend(abc.ABC):
     @abc.abstractmethod
     async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
         raise NotImplementedError
+
+
+class _ItemsProviderProtocol(Protocol):
+    def __call__(self, data: Union[dict, list]):
+        pass
+
+
+class _ItemsProviderProtocolWithParams(Protocol):
+    def __call__(
+        self,
+        data: Union[dict, list],
+        method_args: Optional[tuple] = None,
+        method_kwargs: Optional[dict] = None,
+    ) -> list[dict]:
+        pass
+
+
+ItemsProviderProtocol: TypeAlias = (
+    _ItemsProviderProtocol | _ItemsProviderProtocolWithParams
+)

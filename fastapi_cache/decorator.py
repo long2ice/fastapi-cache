@@ -29,7 +29,8 @@ from starlette.status import HTTP_304_NOT_MODIFIED
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
-from fastapi_cache.types import KeyBuilder
+from fastapi_cache.tag_provider import TagProvider
+from fastapi_cache.types import ItemsProviderProtocol, KeyBuilder
 
 logger: logging.Logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -90,6 +91,8 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
+    tag_provider: Optional[TagProvider] = None,
+    items_provider: Optional[ItemsProviderProtocol] = None,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -98,6 +101,8 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param tag_provider:
+    :param items_provider:
 
     :return:
     """
@@ -194,6 +199,22 @@ def cache(
                         f"Error setting cache key '{cache_key}' in backend:",
                         exc_info=True,
                     )
+                else:
+                    if tag_provider:
+                        decoded = coder.decode(to_cache)
+                        try:
+                            await tag_provider.provide(
+                                data=decoded,
+                                parent_key=cache_key,
+                                expire=expire,
+                                items_provider=items_provider,
+                                method_args=args,
+                                method_kwargs=kwargs,
+                            )
+                        except Exception:
+                            logger.warning(
+                                f"Error while providing tags: {cache_key}", exc_info=True
+                            )
 
                 if response:
                     response.headers.update(
@@ -225,6 +246,39 @@ def cache(
             return result
 
         inner.__signature__ = _augment_signature(wrapped_signature, *to_inject)  # type: ignore[attr-defined]
+
+        return inner
+
+    return wrapper
+
+
+def default_invalidator(response: dict, kwargs: dict) -> str:
+    return f"{response['id']}"
+
+
+def cache_invalidator(
+    tag_provider: TagProvider,
+    invalidator: Callable[[dict, dict], str] = default_invalidator,
+):
+    def wrapper(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[Union[R, Response]]]:
+        @wraps(func)
+        async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
+            coder = FastAPICache.get_coder()
+
+            response = await func(*args, **kwargs)
+
+            data = coder.decode(coder.encode(response))
+
+            try:
+                object_id = invalidator(data, kwargs)
+                await tag_provider.invalidate(object_id)
+            except Exception as e:
+                logger.warning(
+                    f"Exception occurred while invalidating cache: {e}",
+                    exc_info=True,
+                )
+
+            return response
 
         return inner
 
