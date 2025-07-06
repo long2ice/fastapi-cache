@@ -15,6 +15,7 @@ def default_key_builder(
     kwargs: Dict[str, Any],
 ) -> str:
     cache_key = hashlib.md5(  # noqa: S324
-        f"{func.__module__}:{func.__name__}:{args}:{kwargs}".encode()
+        f"{func.__module__}:{func.__name__}:{args}:{kwargs}".encode(),
+        usedforsecurity=False,
     ).hexdigest()
     return f"{namespace}:{cache_key}"
