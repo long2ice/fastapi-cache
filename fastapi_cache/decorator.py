@@ -84,8 +84,22 @@ def _uncacheable(request: Optional[Request]) -> bool:
     return request.headers.get("Cache-Control") == "no-store"
 
 
+def _generate_directive(
+    ttl: int,
+    *,
+    stale_while_revalidate: Optional[int] = None,
+) -> str:
+    directive = f"max-age={ttl}"
+
+    if stale_while_revalidate:
+        directive = ", ".join([directive, f"stale-while-revalidate={stale_while_revalidate}"])
+
+    return directive
+
+
 def cache(
     expire: Optional[int] = None,
+    stale_while_revalidate: Optional[int] = None,
     coder: Optional[Type[Coder]] = None,
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
@@ -96,6 +110,7 @@ def cache(
     :param injected_dependency_namespace:
     :param namespace:
     :param expire:
+    :param stale_while_revalidate:
     :param coder:
     :param key_builder:
 
@@ -127,6 +142,7 @@ def cache(
         async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
             nonlocal coder
             nonlocal expire
+            nonlocal stale_while_revalidate
             nonlocal key_builder
 
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -198,7 +214,7 @@ def cache(
                 if response:
                     response.headers.update(
                         {
-                            "Cache-Control": f"max-age={expire}",
+                            "Cache-Control": _generate_directive(expire, stale_while_revalidate=stale_while_revalidate),
                             "ETag": f"W/{hash(to_cache)}",
                             cache_status_header: "MISS",
                         }
@@ -209,7 +225,7 @@ def cache(
                     etag = f"W/{hash(cached)}"
                     response.headers.update(
                         {
-                            "Cache-Control": f"max-age={ttl}",
+                            "Cache-Control": _generate_directive(ttl, stale_while_revalidate=stale_while_revalidate),
                             "ETag": etag,
                             cache_status_header: "HIT",
                         }
