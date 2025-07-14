@@ -41,7 +41,7 @@ requests = "*"
 coverage = ">=6.5,<8.0"
 httpx = "*"
 tox = "^4.5.1"
-towncrier = "^22.12.0"
+towncrier = ">=22.12,<25.0"
 
 [tool.poetry.group.distributing]
 optional = true
