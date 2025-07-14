@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "fastapi-cache2"
-version = "0.2.2"
+version = "0.3.0"
 description = "Cache for FastAPI"
-authors = ["long2ice <long2ice@gmail.com>"]
+authors = ["long2ice <long2ice@gmail.com>", "Gary Gale <gary@vicchi.org>"]
 license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/long2ice/fastapi-cache"
@@ -24,6 +24,7 @@ pendulum = "^3.0.0"
 aiomcache = { version = "^0.8.2", optional = true }
 aiobotocore = {version = "^2.13.1", optional = true}
 redis = {version = "^5.0.8", extras = ["redis"]}
+valkey = {version = "^6.0.2", extras = ["libvalkey"]}
 
 [tool.poetry.group.linting]
 optional = true
@@ -53,7 +54,8 @@ twine = { version = "^4.0.2", python = "^3.10" }
 redis = ["redis"]
 memcache = ["aiomcache"]
 dynamodb = ["aiobotocore"]
-all = ["redis", "aiomcache", "aiobotocore"]
+valkey = ["valkey"]
+all = ["redis", "aiomcache", "aiobotocore", "valkey"]
 
 [tool.mypy]
 files = ["."]
