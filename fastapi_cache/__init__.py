@@ -25,6 +25,10 @@ class FastAPICache:
     _key_builder: ClassVar[Optional[KeyBuilder]] = None
     _cache_status_header: ClassVar[Optional[str]] = None
     _enable: ClassVar[bool] = True
+    _enable_dogpile_prevention: ClassVar[bool] = True
+    _dogpile_grace_time: ClassVar[float] = 60.0
+    _dogpile_wait_time: ClassVar[float] = 0.1
+    _dogpile_max_wait_time: ClassVar[float] = 5.0
 
     @classmethod
     def init(
@@ -36,6 +40,10 @@ class FastAPICache:
         key_builder: KeyBuilder = default_key_builder,
         cache_status_header: str = "X-FastAPI-Cache",
         enable: bool = True,
+        enable_dogpile_prevention: bool = True,
+        dogpile_grace_time: float = 60.0,
+        dogpile_wait_time: float = 0.1,
+        dogpile_max_wait_time: float = 5.0,
     ) -> None:
         if cls._init:
             return
@@ -47,6 +55,10 @@ class FastAPICache:
         cls._key_builder = key_builder
         cls._cache_status_header = cache_status_header
         cls._enable = enable
+        cls._enable_dogpile_prevention = enable_dogpile_prevention
+        cls._dogpile_grace_time = dogpile_grace_time
+        cls._dogpile_wait_time = dogpile_wait_time
+        cls._dogpile_max_wait_time = dogpile_max_wait_time
 
     @classmethod
     def reset(cls) -> None:
@@ -58,6 +70,10 @@ class FastAPICache:
         cls._key_builder = None
         cls._cache_status_header = None
         cls._enable = True
+        cls._enable_dogpile_prevention = True
+        cls._dogpile_grace_time = 60.0
+        cls._dogpile_wait_time = 0.1
+        cls._dogpile_max_wait_time = 5.0
 
     @classmethod
     def get_backend(cls) -> Backend:
@@ -91,6 +107,22 @@ class FastAPICache:
     @classmethod
     def get_enable(cls) -> bool:
         return cls._enable
+
+    @classmethod
+    def get_enable_dogpile_prevention(cls) -> bool:
+        return cls._enable_dogpile_prevention
+
+    @classmethod
+    def get_dogpile_grace_time(cls) -> float:
+        return cls._dogpile_grace_time
+
+    @classmethod
+    def get_dogpile_wait_time(cls) -> float:
+        return cls._dogpile_wait_time
+
+    @classmethod
+    def get_dogpile_max_wait_time(cls) -> float:
+        return cls._dogpile_max_wait_time
 
     @classmethod
     async def clear(

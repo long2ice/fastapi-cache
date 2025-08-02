@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import sys
 from functools import wraps
@@ -29,6 +30,7 @@ from starlette.status import HTTP_304_NOT_MODIFIED
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
+from fastapi_cache.lock import OptimisticLock
 from fastapi_cache.types import KeyBuilder
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -90,16 +92,24 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
+    enable_dogpile_prevention: Optional[bool] = None,
+    dogpile_grace_time: Optional[float] = None,
+    dogpile_wait_time: Optional[float] = None,
+    dogpile_max_wait_time: Optional[float] = None,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
-    cache all function
-    :param injected_dependency_namespace:
-    :param namespace:
-    :param expire:
-    :param coder:
-    :param key_builder:
+    Cache decorator with dogpile prevention support.
 
-    :return:
+    :param expire: Cache expiration time in seconds
+    :param coder: Encoder/decoder for cache values
+    :param key_builder: Function to build cache keys
+    :param namespace: Cache key namespace
+    :param injected_dependency_namespace: Namespace for injected dependencies
+    :param enable_dogpile_prevention: Enable dogpile/cache stampede prevention
+    :param dogpile_grace_time: Max time to wait for another request to compute the value
+    :param dogpile_wait_time: Time to wait between checks when another request is computing
+    :param dogpile_max_wait_time: Maximum total time to wait for another request
+    :return: Decorated function
     """
 
     injected_request = Parameter(
@@ -128,6 +138,10 @@ def cache(
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
+            nonlocal enable_dogpile_prevention
+            nonlocal dogpile_grace_time
+            nonlocal dogpile_wait_time
+            nonlocal dogpile_max_wait_time
 
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
@@ -162,6 +176,16 @@ def cache(
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
 
+            # Get dogpile prevention settings
+            if enable_dogpile_prevention is None:
+                enable_dogpile_prevention = FastAPICache.get_enable_dogpile_prevention()
+            if dogpile_grace_time is None:
+                dogpile_grace_time = FastAPICache.get_dogpile_grace_time()
+            if dogpile_wait_time is None:
+                dogpile_wait_time = FastAPICache.get_dogpile_wait_time()
+            if dogpile_max_wait_time is None:
+                dogpile_max_wait_time = FastAPICache.get_dogpile_max_wait_time()
+
             cache_key = key_builder(
                 func,
                 f"{prefix}:{namespace}",
@@ -184,16 +208,83 @@ def cache(
                 ttl, cached = 0, None
 
             if cached is None  or (request is not None and request.headers.get("Cache-Control") == "no-cache") :  # cache miss
-                result = await ensure_async_func(*args, **kwargs)
-                to_cache = coder.encode(result)
+                # Dogpile prevention logic
+                if enable_dogpile_prevention and cached is None:
+                    lock = OptimisticLock(backend, cache_key, dogpile_grace_time)
 
-                try:
-                    await backend.set(cache_key, to_cache, expire)
-                except Exception:
-                    logger.warning(
-                        f"Error setting cache key '{cache_key}' in backend:",
-                        exc_info=True,
-                    )
+                    # Check if another request is already computing
+                    is_computing, remaining_time = await lock.is_computing()
+
+                    if is_computing and remaining_time:
+                        # Another request is computing, wait for it
+                        logger.debug(f"Another request is computing {cache_key}, waiting...")
+
+                        total_wait_time = 0.0
+                        while total_wait_time < min(remaining_time, dogpile_max_wait_time):
+                            await asyncio.sleep(dogpile_wait_time)
+                            total_wait_time += dogpile_wait_time
+
+                            # Try to get the value again
+                            try:
+                                ttl, cached = await backend.get_with_ttl(cache_key)
+                                if cached is not None:
+                                    # Value was computed by another request
+                                    logger.debug(f"Got value for {cache_key} after waiting {total_wait_time}s")
+                                    break
+                            except Exception as e:
+                                logger.debug(f"Error while checking cache during dogpile wait: {e}")
+
+                        # If we got a value, treat it as a cache hit
+                        if cached is not None:
+                            if response:
+                                etag = f"W/{hash(cached)}"
+                                response.headers.update(
+                                    {
+                                        "Cache-Control": f"max-age={ttl}",
+                                        "ETag": etag,
+                                        cache_status_header: "HIT",
+                                    }
+                                )
+
+                                if_none_match = request and request.headers.get("if-none-match")
+                                if if_none_match == etag:
+                                    response.status_code = HTTP_304_NOT_MODIFIED
+                                    return response
+
+                            result = cast(R, coder.decode_as_type(cached, type_=return_type))
+                            return result
+
+                    # Mark that we're computing
+                    await lock.start_computing()
+
+                    try:
+                        # Compute the value
+                        result = await ensure_async_func(*args, **kwargs)
+                        to_cache = coder.encode(result)
+
+                        # Store in cache
+                        try:
+                            await backend.set(cache_key, to_cache, expire)
+                        except Exception:
+                            logger.warning(
+                                f"Error setting cache key '{cache_key}' in backend:",
+                                exc_info=True,
+                            )
+                    finally:
+                        # Clear the computing flag
+                        await lock.finish_computing()
+                else:
+                    # Dogpile prevention disabled or forced refresh
+                    result = await ensure_async_func(*args, **kwargs)
+                    to_cache = coder.encode(result)
+
+                    try:
+                        await backend.set(cache_key, to_cache, expire)
+                    except Exception:
+                        logger.warning(
+                            f"Error setting cache key '{cache_key}' in backend:",
+                            exc_info=True,
+                        )
 
                 if response:
                     response.headers.update(

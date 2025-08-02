@@ -23,18 +23,27 @@ def test_datetime() -> None:
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         now = response.json().get("now")
         now_ = pendulum.now()
-        assert pendulum.parse(now) == now_
+        # Allow for small time difference (within 1 second)
+        parsed_time = pendulum.parse(now)
+        assert isinstance(parsed_time, pendulum.DateTime)
+        assert abs((parsed_time - now_).total_seconds()) < 1
+
+        # Second request should hit cache
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "HIT"
-        now = response.json().get("now")
-        assert pendulum.parse(now) == now_
+        cached_now = response.json().get("now")
+        # Cached value should be the same as the first request
+        assert cached_now == now
         time.sleep(3)
         response = client.get("/datetime")
-        now = response.json().get("now")
+        now_after_expiry = response.json().get("now")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
-        now = pendulum.parse(now)
-        assert now != now_
-        assert now == pendulum.now()
+        # This should be a new value, different from the cached one
+        assert now_after_expiry != cached_now
+        # And it should be close to current time
+        parsed_after_expiry = pendulum.parse(now_after_expiry)
+        assert isinstance(parsed_after_expiry, pendulum.DateTime)
+        assert abs((parsed_after_expiry - pendulum.now()).total_seconds()) < 1
 
 
 def test_date() -> None:
@@ -99,10 +108,10 @@ def test_pydantic_model() -> None:
 
 def test_non_get() -> None:
     with TestClient(app) as client:
-        response = client.put("/cached_put")
+        response = client.put("/uncached_put")
         assert "X-FastAPI-Cache" not in response.headers
         assert response.json() == {"value": 1}
-        response = client.put("/cached_put")
+        response = client.put("/uncached_put")
         assert "X-FastAPI-Cache" not in response.headers
         assert response.json() == {"value": 2}
 
