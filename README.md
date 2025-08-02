@@ -14,6 +14,7 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 - Supports `redis`, `memcache`, `dynamodb`, and `in-memory` backends.
 - Easy integration with [FastAPI](https://fastapi.tiangolo.com/).
 - Support for HTTP cache headers like `ETag` and `Cache-Control`, as well as conditional `If-Match-None` requests.
+- Dogpile prevention (cache stampede mitigation) to prevent multiple simultaneous cache refreshes.
 
 ## Requirements
 
@@ -103,8 +104,70 @@ Parameter | type | default | description
 `key_builder` | `KeyBuilder` callable | `default_key_builder` | which key builder to use
 `injected_dependency_namespace` | `str` | `__fastapi_cache` | prefix for injected dependency keywords.
 `cache_status_header` | `str` | `X-FastAPI-Cache` | Name for the header on the response indicating if the request was served from cache; either `HIT` or `MISS`.
+`enable_dogpile_prevention` | `bool` | `None` | Enable dogpile prevention (defaults to global setting)
+`dogpile_grace_time` | `float` | `None` | Maximum time to wait for another request to complete (defaults to global setting)
+`dogpile_wait_time` | `float` | `None` | Time to wait between checks (defaults to global setting)
+`dogpile_max_wait_time` | `float` | `None` | Maximum total wait time (defaults to global setting)
 
 You can also use the `@cache` decorator on regular functions to cache their result.
+
+### Dogpile Prevention
+
+`fastapi-cache` includes built-in dogpile prevention (also known as cache stampede prevention) to handle the common scenario where multiple concurrent requests try to refresh an expired cache entry simultaneously.
+
+When dogpile prevention is enabled:
+1. The first request to find an expired cache entry will proceed to compute the new value
+2. Subsequent requests for the same key will wait briefly for the first request to complete
+3. Once the value is computed, all waiting requests will use the newly cached value
+4. If the computation takes too long, waiting requests will eventually proceed independently
+
+This prevents overwhelming your backend when popular cache entries expire.
+
+#### Configuring Dogpile Prevention
+
+You can configure dogpile prevention globally when initializing FastAPICache:
+
+```python
+from fastapi import FastAPI
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+
+app = FastAPI()
+
+@app.on_event("startup")
+async def startup():
+    FastAPICache.init(
+        RedisBackend(redis_client),
+        prefix="my-app",
+        enable_dogpile_prevention=True,  # Enable globally
+        dogpile_grace_time=60.0,         # Wait up to 60 seconds for computation
+        dogpile_wait_time=0.1,           # Check every 100ms
+        dogpile_max_wait_time=5.0,       # Wait maximum 5 seconds
+    )
+```
+
+Or configure it per endpoint:
+
+```python
+@app.get("/expensive-computation")
+@cache(
+    expire=300,
+    enable_dogpile_prevention=True,
+    dogpile_grace_time=30.0,  # This endpoint's computation might take up to 30s
+)
+async def expensive_endpoint():
+    # Expensive computation here
+    return compute_expensive_result()
+```
+
+To disable dogpile prevention for specific endpoints:
+
+```python
+@app.get("/fast-endpoint")
+@cache(expire=60, enable_dogpile_prevention=False)
+async def fast_endpoint():
+    return {"data": "fast"}
+```
 
 ### Injected Request and Response dependencies
 

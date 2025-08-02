@@ -92,6 +92,42 @@ class Coder:
 
         """
         result = cls.decode(value)
+
+        # If no type is specified, return the raw result
+        if type_ is None:
+            return result
+
+        # Import here to avoid circular imports
+        import dataclasses
+        import inspect
+        from typing import get_origin
+
+        BaseModel = None
+        try:
+            from pydantic import BaseModel as PydanticBaseModel
+            BaseModel = PydanticBaseModel
+        except ImportError:
+            pass
+
+        # Handle different types
+        origin = get_origin(type_) or type_
+
+        # Handle tuples
+        if origin is tuple:
+            if isinstance(result, list):
+                return tuple(result)  # pyright: ignore[reportUnknownArgumentType, reportUnknownVariableType]
+            return result
+
+        # Handle Pydantic models
+        if BaseModel is not None and inspect.isclass(type_) and issubclass(type_, BaseModel):
+            if isinstance(result, dict):
+                return type_(**result)
+            return result
+
+        # Handle dataclasses
+        if dataclasses.is_dataclass(type_) and isinstance(result, dict):
+            return type_(**result)
+
         return result
 
 
