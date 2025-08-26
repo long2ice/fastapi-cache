@@ -71,7 +71,7 @@ def _uncacheable(request: Optional[Request]) -> bool:
 
     Returns true if:
     - Caching has been disabled globally
-    - This is not a GET request
+    - This is not a GET or POST request
     - The request has a Cache-Control header with a value of "no-store"
 
     """
@@ -79,7 +79,7 @@ def _uncacheable(request: Optional[Request]) -> bool:
         return True
     if request is None:
         return False
-    if request.method != "GET":
+    if request.method not in ["GET", "POST"]:
         return True
     return request.headers.get("Cache-Control") == "no-store"
 
