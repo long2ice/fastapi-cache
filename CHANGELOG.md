@@ -10,6 +10,10 @@ This project uses [*towncrier*](https://towncrier.readthedocs.io/) and the chang
 
 ## 0.2
 
+### 0.2.2
+- Valkey backend support
+- Example for Valkey backend
+
 ### 0.2.1
 - Fix picklecoder
 - Fix connection failure transparency and add logging

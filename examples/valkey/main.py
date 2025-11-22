@@ -10,22 +10,38 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.backends.valkey import ValkeyBackend
 from fastapi_cache.coder import PickleCoder
 from fastapi_cache.decorator import cache
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-import redis.asyncio as redis
-from redis.asyncio.connection import ConnectionPool
+from valkey.asyncio import Valkey
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    pool = ConnectionPool.from_url(url="redis://redis")
-    r = redis.Redis(connection_pool=pool)
-    FastAPICache.init(RedisBackend(r), prefix="fastapi-cache")
+    client = Valkey(
+        host="localhost",
+        port=6379,
+        db=0,
+        decode_responses=False,      
+    )
+    
+    # Test the connection
+    try:
+        await client.ping()
+        print(f"✓ Connected to Valkey at localhost:6379")
+    except Exception as e:
+        print(f"✗ Failed to connect to Valkey: {e}")
+        raise
+
+    FastAPICache.init(ValkeyBackend(client), prefix="fastapi-cache")
+
     yield
+    
+    print("Closing Valkey connection...")
+    await client.close()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -63,10 +79,9 @@ async def get_data(request: Request, response: Response):
     return pendulum.today()
 
 
-# Note: This function MUST be sync to demonstrate fastapi-cache's correct handling,
-# i.e. running cached sync functions in threadpool just like FastAPI itself!
+# MUST be sync to verify threadpool + cache handling
 @app.get("/blocking")
-@cache(namespace="test", expire=10) # pyright: ignore[reportArgumentType]
+@cache(namespace="test", expire=10)  # pyright: ignore[reportArgumentType]
 def blocking():
     time.sleep(2)
     return {"ret": 42}
@@ -82,7 +97,9 @@ async def get_datetime(request: Request, response: Response):
 @app.get("/html", response_class=HTMLResponse)
 @cache(expire=60, namespace="html", coder=PickleCoder)
 async def cache_html(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "ret": await get_ret()})
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "ret": await get_ret()}
+    )
 
 
 @app.get("/cache_response_obj")
