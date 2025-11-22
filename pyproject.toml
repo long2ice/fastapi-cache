@@ -24,6 +24,7 @@ pendulum = "^3.0.0"
 aiomcache = { version = "^0.8.2", optional = true }
 aiobotocore = {version = "^2.13.1", optional = true}
 redis = {version = "^5.0.8", extras = ["redis"]}
+valkey = "^6.1.1"
 
 [tool.poetry.group.linting]
 optional = true
