@@ -11,7 +11,7 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 ## Features
 
-- Supports `redis`, `memcache`, `dynamodb`, and `in-memory` backends.
+- Supports `redis`, `valkey`, `memcache`, `dynamodb`, and `in-memory` backends.
 - Easy integration with [FastAPI](https://fastapi.tiangolo.com/).
 - Support for HTTP cache headers like `ETag` and `Cache-Control`, as well as conditional `If-Match-None` requests.
 
@@ -19,6 +19,7 @@ backends supporting Redis, Memcached, and Amazon DynamoDB.
 
 - FastAPI
 - `redis` when using `RedisBackend`.
+- `valkey` when using `ValkeyBackend`.
 - `memcache` when using `MemcacheBackend`.
 - `aiobotocore` when using `DynamoBackend`.
 
@@ -32,6 +33,12 @@ or
 
 ```shell
 > pip install "fastapi-cache2[redis]"
+```
+
+or
+
+```shell
+> pip install "fastapi-cache2[valkey]"
 ```
 
 or
@@ -220,6 +227,11 @@ data has been cached, the data will not be removed automatically.
 When using the Redis backend, please make sure you pass in a redis client that does [_not_ decode responses][redis-decode] (`decode_responses` **must** be `False`, which is the default). Cached data is stored as `bytes` (binary), decoding these in the Redis client would break caching.
 
 [redis-decode]: https://redis-py.readthedocs.io/en/latest/examples/connection_examples.html#by-default-Redis-return-binary-responses,-to-decode-them-use-decode_responses=True
+
+### ValkeyBackend
+
+When using the Valkey backend, please make sure you pass in a Valkey client that does not decode responses (`decode_responses` **must** be `False`). Cached data is stored as `bytes` (binary), decoding these in the Valkey client would break caching.
+
 
 ## Tests and coverage
 
