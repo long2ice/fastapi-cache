@@ -26,3 +26,10 @@ except ImportError:
     pass
 else:
     __all__ += ["redis"]
+
+try:
+    from fastapi_cache.backends import valkey
+except ImportError:
+    pass
+else:
+    __all__ += ["valkey"]
