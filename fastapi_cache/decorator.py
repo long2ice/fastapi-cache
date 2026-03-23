@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import sys
 from functools import wraps
@@ -64,6 +65,16 @@ def _locate_param(
         to_inject.append(dep)
         param = dep
     return param
+
+
+def _compute_etag(data: bytes) -> str:
+    """Compute a deterministic ETag hash from cache data.
+
+    Uses MD5 for speed since this is for caching, not security.
+    Unlike Python's built-in hash(), this produces consistent values
+    across different processes and service restarts.
+    """
+    return hashlib.md5(data).hexdigest()
 
 
 def _uncacheable(request: Optional[Request]) -> bool:
@@ -199,14 +210,14 @@ def cache(
                     response.headers.update(
                         {
                             "Cache-Control": f"max-age={expire}",
-                            "ETag": f"W/{hash(to_cache)}",
+                            "ETag": f"W/{_compute_etag(to_cache)}",
                             cache_status_header: "MISS",
                         }
                     )
 
             else:  # cache hit
                 if response:
-                    etag = f"W/{hash(cached)}"
+                    etag = f"W/{_compute_etag(cached)}"
                     response.headers.update(
                         {
                             "Cache-Control": f"max-age={ttl}",
