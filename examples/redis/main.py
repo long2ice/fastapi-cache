@@ -1,9 +1,10 @@
 # pyright: reportGeneralTypeIssues=false
 import time
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 import pendulum
+import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
@@ -13,11 +14,9 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.coder import PickleCoder
 from fastapi_cache.decorator import cache
+from redis.asyncio.connection import ConnectionPool
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-
-import redis.asyncio as redis
-from redis.asyncio.connection import ConnectionPool
 
 
 @asynccontextmanager

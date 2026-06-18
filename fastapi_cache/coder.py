@@ -1,15 +1,12 @@
 import datetime
 import json
 import pickle  # nosec:B403
+from collections.abc import Callable
 from decimal import Decimal
 from typing import (
     Any,
-    Callable,
     ClassVar,
-    Dict,
-    Optional,
     TypeVar,
-    Union,
     overload,
 )
 
@@ -27,7 +24,7 @@ class ModelField:
 _T = TypeVar("_T", bound=type)
 
 
-CONVERTERS: Dict[str, Callable[[str], Any]] = {
+CONVERTERS: dict[str, Callable[[str], Any]] = {
     # Pendulum 3.0.0 adds parse to __all__, at which point these ignores can be removed
     "date": lambda x: pendulum.parse(x, exact=True),
     "datetime": lambda x: pendulum.parse(x, exact=True),
@@ -72,7 +69,7 @@ class Coder:
     # decode_as_type method and then stores a different kind of field for a
     # given type, do make sure that the subclass provides its own class
     # attribute for this cache.
-    _type_field_cache: ClassVar[Dict[Any, ModelField]] = {}
+    _type_field_cache: ClassVar[dict[Any, ModelField]] = {}
 
     @overload
     @classmethod
@@ -85,7 +82,7 @@ class Coder:
         ...
 
     @classmethod
-    def decode_as_type(cls, value: bytes, *, type_: Optional[_T]) -> Union[_T, Any]:
+    def decode_as_type(cls, value: bytes, *, type_: _T | None) -> _T | Any:
         """Decode value to the specific given type
 
         The default implementation uses the Pydantic model system to convert the value.
@@ -122,7 +119,7 @@ class PickleCoder(Coder):
         return pickle.loads(value)  # noqa: S301
 
     @classmethod
-    def decode_as_type(cls, value: bytes, *, type_: Optional[_T]) -> Any:
+    def decode_as_type(cls, value: bytes, *, type_: _T | None) -> Any:
         # Pickle already produces the correct type on decoding, no point
         # in paying an extra performance penalty for pydantic to discover
         # the same.

@@ -9,45 +9,47 @@ homepage = "https://github.com/long2ice/fastapi-cache"
 repository = "https://github.com/long2ice/fastapi-cache.git"
 documentation = "https://github.com/long2ice/fastapi-cache"
 keywords = ["fastapi", "cache", "caching"]
-packages = [
-    { include = "fastapi_cache" }
-]
+packages = [{ include = "fastapi_cache" }]
 include = ["LICENSE", "README.md"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-fastapi = "*"
+python = "^3.10"
+fastapi = ">=0.100.0,<1.0.0"
 uvicorn = "*"
-typing-extensions = { version = ">=4.1.0" }
-importlib-metadata = { version = "^6.6.0", python = "<3.8" }
+typing-extensions = { version = ">=4.10.0,<5.0.0" }
 pendulum = "^3.0.0"
 aiomcache = { version = "^0.8.2", optional = true }
-aiobotocore = {version = "^2.13.1", optional = true}
-redis = {version = "^5.0.8", extras = ["redis"]}
+aiobotocore = { version = "^2.13.1", optional = true }
+redis = { version = ">=5.0.8,<7.0.0", optional = true }
 
 [tool.poetry.group.linting]
 optional = true
 
 [tool.poetry.group.linting.dependencies]
-mypy = { version = "^1.2.0", python = "^3.10" }
-pyright = { version = "^1.1.373", python = "^3.10" }
-types-aiobotocore = { extras = ["dynamodb"], version = "^2.5.0.post2", python = "^3.10" }
+mypy = { version = ">=1.5.0", python = "^3.10" }
+pyright = { version = ">=1.1.373,<1.1.400", python = "^3.10" }
+types-aiobotocore = { extras = [
+    "dynamodb",
+], version = "^2.5.0.post2", python = "^3.10" }
 types-redis = { version = "^4.5.4.2", python = "^3.10" }
-ruff = { version = ">=0.0.267,<0.1.2", python = "^3.10" }
+ruff = { version = ">=0.4.0", python = "^3.10" }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
 requests = "*"
-coverage = ">=6.5,<8.0"
+coverage = ">=7.0,<9.0"
 httpx = "*"
-tox = "^4.5.1"
-towncrier = "^22.12.0"
+tox = ">=4.5.1"
+towncrier = ">=24.8.0"
+hypothesis = ">=6.0"
+fakeredis = { version = ">=2.0", extras = ["lua"] }
+pytest-asyncio = ">=0.23.0"
 
 [tool.poetry.group.distributing]
 optional = true
 
 [tool.poetry.group.distributing.dependencies]
-twine = { version = "^4.0.2", python = "^3.10" }
+twine = { version = "^6.1.0", python = "^3.10" }
 
 [tool.poetry.extras]
 redis = ["redis"]
@@ -57,7 +59,7 @@ all = ["redis", "aiomcache", "aiobotocore"]
 
 [tool.mypy]
 files = ["."]
-python_version = "3.8"
+python_version = "3.10"
 # equivalent of --strict
 warn_unused_configs = true
 disallow_any_generics = true
@@ -89,26 +91,20 @@ title_format = "## [{version}](https://github.com/long2ice/fastapi-cache/tree/{v
 issue_format = "[#{issue}](https://github.com/long2ice/fastapi-cache/issues/{issue})"
 
 [tool.pyright]
-strict = ["fastapi_cache", "tests"]
-pythonVersion = "3.8"
+strict = ["fastapi_cache"]
+pythonVersion = "3.10"
+exclude = ["examples"]
 
 [tool.pytest.ini_options]
 addopts = "-p no:warnings"
 
 [tool.ruff]
-ignore = ["E501"]
 line-length = 80
-select = [
-    "B", # flake8-bugbear
-    "C4", # flake8-comprehensions
-    "E", # pycodestyle errors
-    "F", # pyflakes
-    "I", # isort
-    "S", # flake8-bandit
-    "W", # pycodestyle warnings
-    "UP", # pyupgrade
-]
-target-version = "py38"
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["B", "C4", "E", "F", "I", "S", "W", "UP"]
+ignore = ["E501"]
 
 [build-system]
 requires = ["poetry-core"]

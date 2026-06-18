@@ -1,6 +1,6 @@
 # pyright: reportGeneralTypeIssues=false
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Dict, Optional
 
 import pendulum
 import uvicorn
@@ -94,9 +94,9 @@ app.get("/method")(cache(namespace="test")(instance.handler_method))
 # cache a Pydantic model instance; the return type annotation is required in this case
 class Item(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     price: float
-    tax: Optional[float] = None
+    tax: float | None = None
 
 
 @app.get("/pydantic_instance")
@@ -129,7 +129,7 @@ async def cached_put():
 @cache(namespace="test", expire=5, injected_dependency_namespace="monty_python") # pyright: ignore[reportArgumentType]
 def namespaced_injection(
     __fastapi_cache_request: int = 42, __fastapi_cache_response: int = 17
-) -> Dict[str, int]:
+) -> dict[str, int]:
     return {
         "__fastapi_cache_request": __fastapi_cache_request,
         "__fastapi_cache_response": __fastapi_cache_response,

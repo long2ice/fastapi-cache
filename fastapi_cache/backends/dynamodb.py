@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING
 
 from aiobotocore.client import AioBaseClient
 from aiobotocore.session import AioSession, get_session
@@ -33,9 +33,9 @@ class DynamoBackend(Backend):
     client: DynamoDBClient
     session: AioSession
     table_name: str
-    region: Optional[str]
+    region: str | None
 
-    def __init__(self, table_name: str, region: Optional[str] = None) -> None:
+    def __init__(self, table_name: str, region: str | None = None) -> None:
         self.session: AioSession = get_session()
         self.table_name = table_name
         self.region = region
@@ -46,10 +46,12 @@ class DynamoBackend(Backend):
         ).__aenter__()
 
     async def close(self) -> None:
-        self.client = await self.client.__aexit__(None, None, None)
+        self.client = await self.client.__aexit__(None, None, None)  # type: ignore[assignment,func-returns-value]
 
-    async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
-        response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
+    async def get_with_ttl(self, key: str) -> tuple[int, bytes | None]:
+        response = await self.client.get_item(
+            TableName=self.table_name, Key={"key": {"S": key}}
+        )
 
         if "Item" in response:
             value = response["Item"].get("value", {}).get("B")
@@ -65,20 +67,25 @@ class DynamoBackend(Backend):
 
         return 0, None
 
-    async def get(self, key: str) -> Optional[bytes]:
-        response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
+    async def get(self, key: str) -> bytes | None:
+        response = await self.client.get_item(
+            TableName=self.table_name, Key={"key": {"S": key}}
+        )
         if "Item" in response:
             return response["Item"].get("value", {}).get("B")
         return None
 
-    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: bytes, expire: int | None = None
+    ) -> None:
         ttl = (
             {
                 "ttl": {
                     "N": str(
                         int(
                             (
-                                datetime.datetime.now() + datetime.timedelta(seconds=expire)
+                                datetime.datetime.now()
+                                + datetime.timedelta(seconds=expire)
                             ).timestamp()
                         )
                     )
@@ -99,5 +106,7 @@ class DynamoBackend(Backend):
             },
         )
 
-    async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
+    async def clear(
+        self, namespace: str | None = None, key: str | None = None
+    ) -> int:
         raise NotImplementedError

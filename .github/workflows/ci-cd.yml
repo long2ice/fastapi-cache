@@ -9,22 +9,25 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Linter
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Poetry
         run: pipx install poetry
       - name: Setup Python
         id: setup-python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
           cache: poetry
       - name: Cache mypy cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .mypy_cache
           key: ${{ runner.os }}-mypy-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
@@ -41,14 +44,14 @@ jobs:
       - lint
     strategy:
       matrix:
-        python: ["3.8", "3.9", "3.10", "3.11"]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
       fail-fast: false
 
     name: "Test on Python ${{ matrix.python }}"
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Poetry
         run: pipx install poetry
       - uses: actions/setup-python@v5
@@ -79,19 +82,19 @@ jobs:
     needs: [test-summary]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Poetry
         run: pipx install poetry
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.12'
           cache: poetry
       - name: Build distributions
         run:
           make build
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist
@@ -108,9 +111,10 @@ jobs:
       url: https://pypi.org/p/fastapi-cache2
     permissions:
       id-token: write
+      contents: read
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist

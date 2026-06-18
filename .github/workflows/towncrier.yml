@@ -14,6 +14,9 @@ jobs:
   towncrier:
     name: Towncrier
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     # skip if this is a bot or the PR has the skip-changelog label
     # note that the towncrier check command can recognize a release PR, by looking
     # for changes to the CHANGELOG.md file.

@@ -1,5 +1,5 @@
 from importlib.metadata import version
-from typing import ClassVar, Optional, Type
+from typing import ClassVar
 
 from fastapi_cache.coder import Coder, JsonCoder
 from fastapi_cache.key_builder import default_key_builder
@@ -17,13 +17,13 @@ __all__ = [
 
 
 class FastAPICache:
-    _backend: ClassVar[Optional[Backend]] = None
-    _prefix: ClassVar[Optional[str]] = None
-    _expire: ClassVar[Optional[int]] = None
+    _backend: ClassVar[Backend | None] = None
+    _prefix: ClassVar[str | None] = None
+    _expire: ClassVar[int | None] = None
     _init: ClassVar[bool] = False
-    _coder: ClassVar[Optional[Type[Coder]]] = None
-    _key_builder: ClassVar[Optional[KeyBuilder]] = None
-    _cache_status_header: ClassVar[Optional[str]] = None
+    _coder: ClassVar[type[Coder] | None] = None
+    _key_builder: ClassVar[KeyBuilder | None] = None
+    _cache_status_header: ClassVar[str | None] = None
     _enable: ClassVar[bool] = True
 
     @classmethod
@@ -31,8 +31,8 @@ class FastAPICache:
         cls,
         backend: Backend,
         prefix: str = "",
-        expire: Optional[int] = None,
-        coder: Type[Coder] = JsonCoder,
+        expire: int | None = None,
+        coder: type[Coder] = JsonCoder,
         key_builder: KeyBuilder = default_key_builder,
         cache_status_header: str = "X-FastAPI-Cache",
         enable: bool = True,
@@ -70,11 +70,11 @@ class FastAPICache:
         return cls._prefix
 
     @classmethod
-    def get_expire(cls) -> Optional[int]:
+    def get_expire(cls) -> int | None:
         return cls._expire
 
     @classmethod
-    def get_coder(cls) -> Type[Coder]:
+    def get_coder(cls) -> type[Coder]:
         assert cls._coder, "You must call init first!"  # noqa: S101
         return cls._coder
 
@@ -94,7 +94,7 @@ class FastAPICache:
 
     @classmethod
     async def clear(
-        cls, namespace: Optional[str] = None, key: Optional[str] = None
+        cls, namespace: str | None = None, key: str | None = None
     ) -> int:
         assert (  # noqa: S101
             cls._backend and cls._prefix is not None
