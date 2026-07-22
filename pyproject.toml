@@ -21,6 +21,10 @@ uvicorn = "*"
 typing-extensions = { version = ">=4.1.0" }
 importlib-metadata = { version = "^6.6.0", python = "<3.8" }
 pendulum = "^3.0.0"
+# coder.py imports starlette.templating unconditionally, which requires jinja2.
+# jinja2 is only an optional starlette extra (dropped from the base install in
+# Starlette 1.0), so declare it explicitly here.
+jinja2 = "*"
 aiomcache = { version = "^0.8.2", optional = true }
 aiobotocore = {version = "^2.13.1", optional = true}
 redis = {version = "^5.0.8", extras = ["redis"]}
