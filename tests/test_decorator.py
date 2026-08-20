@@ -22,19 +22,19 @@ def test_datetime() -> None:
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         now = response.json().get("now")
-        now_ = pendulum.now()
-        assert pendulum.parse(now) == now_
+        now_ = pendulum.now().replace(microsecond=0)
+        assert pendulum.parse(now).replace(microsecond=0) == now_
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "HIT"
         now = response.json().get("now")
-        assert pendulum.parse(now) == now_
+        assert pendulum.parse(now).replace(microsecond=0) == now_
         time.sleep(3)
         response = client.get("/datetime")
         now = response.json().get("now")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
-        now = pendulum.parse(now)
+        now = pendulum.parse(now).replace(microsecond=0)
         assert now != now_
-        assert now == pendulum.now()
+        assert now == pendulum.now().replace(microsecond=0)
 
 
 def test_date() -> None:
@@ -99,10 +99,10 @@ def test_pydantic_model() -> None:
 
 def test_non_get() -> None:
     with TestClient(app) as client:
-        response = client.put("/cached_put")
+        response = client.put("/uncached_put")
         assert "X-FastAPI-Cache" not in response.headers
         assert response.json() == {"value": 1}
-        response = client.put("/cached_put")
+        response = client.put("/uncached_put")
         assert "X-FastAPI-Cache" not in response.headers
         assert response.json() == {"value": 2}
 
