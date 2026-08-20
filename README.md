@@ -102,6 +102,7 @@ Parameter | type | default | description
 `coder` | `Coder` | `JsonCoder` | which coder to use, e.g. `JsonCoder`
 `key_builder` | `KeyBuilder` callable | `default_key_builder` | which key builder to use
 `injected_dependency_namespace` | `str` | `__fastapi_cache` | prefix for injected dependency keywords.
+`exclude_params` | `Collection[str]` | `None` | names of parameters to leave out of the cache key
 `cache_status_header` | `str` | `X-FastAPI-Cache` | Name for the header on the response indicating if the request was served from cache; either `HIT` or `MISS`.
 
 You can also use the `@cache` decorator on regular functions to cache their result.
@@ -119,6 +120,34 @@ The keyword arguments for these extra dependencies are named
 Use the `injected_dependency_namespace` argument to `@cache` to change the
 prefix used if those names would clash anyway.
 
+
+### Excluding parameters from the cache key
+
+Some arguments should not make two calls into two separate cache entries: a
+database session, an authenticated user, a request id, or a tracing nonce. List
+their names in `exclude_params` and they are dropped from the arguments handed
+to the key builder, so calls differing only in those values share one entry.
+
+```python
+@app.get("/items/{item_id}")
+@cache(expire=60, exclude_params=["db", "trace_id"])
+async def read_item(
+    item_id: int,
+    trace_id: str = "",
+    db: Session = Depends(get_db),
+) -> Item:
+    return get_item(db, item_id)
+```
+
+The filtering happens before the key builder runs, so it applies to the default
+key builder and to custom ones alike. Note that a custom key builder deriving
+its key from the request itself (for example from `request.url` or
+`request.query_params`) never sees the filtered arguments and has to do its own
+exclusion.
+
+Names that do not appear in the decorated function's signature raise a
+`ValueError` at decoration time, so typos surface at import. Functions
+accepting `**kwargs` are exempt from that check, as any name can be valid there.
 
 ### Supported data types
 
