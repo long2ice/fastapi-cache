@@ -1,6 +1,6 @@
 # pyright: reportGeneralTypeIssues=false
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Dict, Optional
+from typing import Any, AsyncIterator, Dict, Optional
 
 import pendulum
 import uvicorn
@@ -134,6 +134,18 @@ def namespaced_injection(
         "__fastapi_cache_request": __fastapi_cache_request,
         "__fastapi_cache_response": __fastapi_cache_response,
     }
+
+
+exclude_ret = 0
+
+
+@app.get("/excluded_params")
+@cache(namespace="test", expire=5, exclude_params=["nonce"])
+async def excluded_params(name: str, nonce: str = "") -> Dict[str, Any]:
+    # calls that only differ in `nonce` all share one cache entry
+    global exclude_ret
+    exclude_ret = exclude_ret + 1
+    return {"name": name, "nonce": nonce, "value": exclude_ret}
 
 
 if __name__ == "__main__":

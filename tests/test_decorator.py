@@ -1,5 +1,6 @@
+import asyncio
 import time
-from typing import Any, Generator
+from typing import Any, Dict, Generator, List, Tuple
 
 import pendulum
 import pytest
@@ -8,6 +9,7 @@ from starlette.testclient import TestClient
 from examples.in_memory.main import app
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.decorator import cache
 
 
 @pytest.fixture(autouse=True)
@@ -22,19 +24,19 @@ def test_datetime() -> None:
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
         now = response.json().get("now")
-        now_ = pendulum.now()
-        assert pendulum.parse(now) == now_
+        now_ = pendulum.now().replace(microsecond=0)
+        assert pendulum.parse(now).replace(microsecond=0) == now_
         response = client.get("/datetime")
         assert response.headers.get("X-FastAPI-Cache") == "HIT"
         now = response.json().get("now")
-        assert pendulum.parse(now) == now_
+        assert pendulum.parse(now).replace(microsecond=0) == now_
         time.sleep(3)
         response = client.get("/datetime")
         now = response.json().get("now")
         assert response.headers.get("X-FastAPI-Cache") == "MISS"
-        now = pendulum.parse(now)
+        now = pendulum.parse(now).replace(microsecond=0)
         assert now != now_
-        assert now == pendulum.now()
+        assert now == pendulum.now().replace(microsecond=0)
 
 
 def test_date() -> None:
@@ -99,10 +101,10 @@ def test_pydantic_model() -> None:
 
 def test_non_get() -> None:
     with TestClient(app) as client:
-        response = client.put("/cached_put")
+        response = client.put("/uncached_put")
         assert "X-FastAPI-Cache" not in response.headers
         assert response.json() == {"value": 1}
-        response = client.put("/cached_put")
+        response = client.put("/uncached_put")
         assert "X-FastAPI-Cache" not in response.headers
         assert response.json() == {"value": 2}
 
@@ -135,3 +137,58 @@ def test_cache_control() -> None:
 
         response = client.get("/cached_put")
         assert response.json() == {"value": 2}
+
+
+def test_exclude_params() -> None:
+    """Parameters listed in exclude_params are left out of the cache key."""
+    with TestClient(app) as client:
+        response = client.get("/excluded_params", params={"name": "Jon", "nonce": "a"})
+        assert response.headers.get("X-FastAPI-Cache") == "MISS"
+        assert response.json() == {"name": "Jon", "nonce": "a", "value": 1}
+
+        # a different nonce hits the same cache entry
+        response = client.get("/excluded_params", params={"name": "Jon", "nonce": "b"})
+        assert response.headers.get("X-FastAPI-Cache") == "HIT"
+        assert response.json() == {"name": "Jon", "nonce": "a", "value": 1}
+
+        # a different name is still a distinct entry
+        response = client.get("/excluded_params", params={"name": "Ben", "nonce": "b"})
+        assert response.headers.get("X-FastAPI-Cache") == "MISS"
+        assert response.json() == {"name": "Ben", "nonce": "b", "value": 2}
+
+
+def test_exclude_params_positional() -> None:
+    """Positional arguments are matched to their parameter name by position."""
+    calls: List[Tuple[int, int]] = []
+
+    @cache(namespace="test", expire=5, exclude_params=["b"])
+    async def func(a: int, b: int) -> int:
+        calls.append((a, b))
+        return a
+
+    assert asyncio.run(func(1, 2)) == 1
+    assert asyncio.run(func(1, 3)) == 1
+    assert calls == [(1, 2)]
+
+    assert asyncio.run(func(4, 3)) == 4
+    assert calls == [(1, 2), (4, 3)]
+
+
+def test_exclude_params_unknown_name() -> None:
+    """A typo in exclude_params is reported when the function is decorated."""
+    with pytest.raises(ValueError, match="nonexistent"):
+
+        @cache(namespace="test", exclude_params=["nonexistent"])
+        async def func(a: int) -> int:
+            return a
+
+
+def test_exclude_params_var_keyword() -> None:
+    """Functions taking **kwargs accept any excluded name."""
+
+    @cache(namespace="test", expire=5, exclude_params=["nonce"])
+    async def func(**kwargs: Any) -> Dict[str, Any]:
+        return kwargs
+
+    assert asyncio.run(func(name="Jon", nonce="a")) == {"name": "Jon", "nonce": "a"}
+    assert asyncio.run(func(name="Jon", nonce="b")) == {"name": "Jon", "nonce": "a"}

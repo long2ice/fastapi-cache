@@ -3,10 +3,14 @@ import sys
 from functools import wraps
 from inspect import Parameter, Signature, isawaitable, iscoroutinefunction
 from typing import (
+    Any,
     Awaitable,
     Callable,
+    Collection,
+    Dict,
     List,
     Optional,
+    Tuple,
     Type,
     TypeVar,
     Union,
@@ -66,6 +70,52 @@ def _locate_param(
     return param
 
 
+def _check_excluded_params(sig: Signature, exclude_params: Collection[str]) -> None:
+    """Verify that the excluded parameter names exist on the decorated function
+
+    Functions accepting arbitrary keyword arguments are exempt, as any name
+    could be a valid argument for those.
+
+    """
+    if any(p.kind is Parameter.VAR_KEYWORD for p in sig.parameters.values()):
+        return
+    unknown = sorted(set(exclude_params) - set(sig.parameters))
+    if unknown:
+        raise ValueError(
+            f"exclude_params contains parameters not present in the signature: "
+            f"{', '.join(unknown)}"
+        )
+
+
+def _exclude_params(
+    sig: Signature,
+    exclude_params: Collection[str],
+    args: Tuple[Any, ...],
+    kwargs: Dict[str, Any],
+) -> Tuple[Tuple[Any, ...], Dict[str, Any]]:
+    """Drop the named parameters from the arguments used to build the cache key
+
+    Arguments passed positionally are matched to their parameter name by
+    position; anything absorbed by a variadic positional parameter is kept.
+
+    """
+    filtered_kwargs = {k: v for k, v in kwargs.items() if k not in exclude_params}
+    if not args:
+        return args, filtered_kwargs
+
+    positional = [
+        p.name
+        for p in sig.parameters.values()
+        if p.kind in (Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD)
+    ]
+    filtered_args = tuple(
+        value
+        for i, value in enumerate(args)
+        if i >= len(positional) or positional[i] not in exclude_params
+    )
+    return filtered_args, filtered_kwargs
+
+
 def _uncacheable(request: Optional[Request]) -> bool:
     """Determine if this request should not be cached
 
@@ -90,6 +140,7 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
+    exclude_params: Optional[Collection[str]] = None,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -98,6 +149,9 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param exclude_params: names of parameters to leave out of the cache key, so
+        that calls differing only in those values share a cache entry. Applied
+        before the key builder runs, so it works with custom key builders too.
 
     :return:
     """
@@ -122,6 +176,8 @@ def cache(
         request_param = _locate_param(wrapped_signature, injected_request, to_inject)
         response_param = _locate_param(wrapped_signature, injected_response, to_inject)
         return_type = get_typed_return_annotation(func)
+        if exclude_params:
+            _check_excluded_params(wrapped_signature, exclude_params)
 
         @wraps(func)
         async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
@@ -162,13 +218,20 @@ def cache(
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
 
+            key_args: Tuple[Any, ...] = args
+            key_kwargs: Dict[str, Any] = copy_kwargs
+            if exclude_params:
+                key_args, key_kwargs = _exclude_params(
+                    wrapped_signature, exclude_params, args, copy_kwargs
+                )
+
             cache_key = key_builder(
                 func,
                 f"{prefix}:{namespace}",
                 request=request,
                 response=response,
-                args=args,
-                kwargs=copy_kwargs,
+                args=key_args,
+                kwargs=key_kwargs,
             )
             if isawaitable(cache_key):
                 cache_key = await cache_key
