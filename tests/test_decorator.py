@@ -74,6 +74,23 @@ def test_cache_response_obj() -> None:
         assert get_cache_response.headers.get("etag")
 
 
+def test_cache_error_response_obj_is_not_cached() -> None:
+    """A Response returned directly by the endpoint with an error status
+    code must not be cached: caching it would mean a later cache hit comes
+    back as a 200 with the error body, since nothing records the original
+    status code alongside the cached bytes."""
+    with TestClient(app) as client:
+        first = client.get("cache_error_response_obj")
+        assert first.status_code == 404
+        assert first.json() == {"count": 1}
+        assert "X-FastAPI-Cache" not in first.headers
+
+        second = client.get("cache_error_response_obj")
+        assert second.status_code == 404
+        assert second.json() == {"count": 2}
+        assert "X-FastAPI-Cache" not in second.headers
+
+
 def test_kwargs() -> None:
     with TestClient(app) as client:
         name = "Jon"

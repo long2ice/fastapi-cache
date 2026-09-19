@@ -185,6 +185,16 @@ def cache(
 
             if cached is None  or (request is not None and request.headers.get("Cache-Control") == "no-cache") :  # cache miss
                 result = await ensure_async_func(*args, **kwargs)
+
+                if isinstance(result, Response) and result.status_code >= 400:
+                    # An error response returned directly by the endpoint
+                    # (rather than raised as an HTTPException) has no place
+                    # to record its own status code in the cache, so a
+                    # later cache hit would come back as a 200 with the
+                    # error body. Simplest correct behavior is to not
+                    # cache it at all.
+                    return result
+
                 to_cache = coder.encode(result)
 
                 try:
