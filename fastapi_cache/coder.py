@@ -15,14 +15,11 @@ from typing import (
 
 import pendulum
 from fastapi.encoders import jsonable_encoder
+from pydantic import TypeAdapter
 from starlette.responses import JSONResponse
 from starlette.templating import (
     _TemplateResponse as TemplateResponse,  # pyright: ignore[reportPrivateUsage]
 )
-
-
-class ModelField:
-    pass
 
 _T = TypeVar("_T", bound=type)
 
@@ -67,12 +64,9 @@ class Coder:
     def decode(cls, value: bytes) -> Any:
         raise NotImplementedError
 
-    # (Shared) cache for endpoint return types to Pydantic model fields.
-    # Note that subclasses share this cache! If a subclass overrides the
-    # decode_as_type method and then stores a different kind of field for a
-    # given type, do make sure that the subclass provides its own class
-    # attribute for this cache.
-    _type_field_cache: ClassVar[Dict[Any, ModelField]] = {}
+    # Subclasses share this. Override the attribute if decode_as_type stores
+    # something other than a TypeAdapter for a given type.
+    _type_adapter_cache: ClassVar[Dict[Any, TypeAdapter[Any]]] = {}
 
     @overload
     @classmethod
@@ -92,7 +86,17 @@ class Coder:
 
         """
         result = cls.decode(value)
-        return result
+        if type_ is None:
+            return result
+
+        adapter: TypeAdapter[Any]
+        try:
+            adapter = cls._type_adapter_cache[type_]
+        except KeyError:
+            adapter = TypeAdapter(type_)
+            cls._type_adapter_cache[type_] = adapter
+        validated: Any = adapter.validate_python(result)
+        return validated
 
 
 class JsonCoder(Coder):
