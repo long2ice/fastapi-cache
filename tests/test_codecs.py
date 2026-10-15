@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple, Type
+from typing import Any, List, Optional, Tuple, Type
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -51,6 +51,10 @@ def test_pickle_coder(value: Any) -> None:
         ({"some_key": 1, "other_key": 2}, None),
         (DCItem(name="foo", price=42.0, description="some dataclass item", tax=0.2), DCItem),
         (PDItem(name="foo", price=42.0, description="some pydantic item", tax=0.2), PDItem),
+        (
+            [PDItem(name="foo", price=42.0, description="some pydantic item", tax=0.2)],
+            List[PDItem],
+        ),
     ],
 )
 def test_json_coder(value: Any, return_type: Type[Any]) -> None:
