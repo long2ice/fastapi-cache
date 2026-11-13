@@ -52,7 +52,7 @@ class InMemoryBackend(Backend):
         if namespace:
             keys = list(self._store.keys())
             for key in keys:
-                if key.startswith(namespace):
+                if key.startswith(namespace + ":"):
                     del self._store[key]
                     count += 1
         elif key:
